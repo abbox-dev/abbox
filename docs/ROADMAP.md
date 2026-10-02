@@ -2,18 +2,17 @@
 
 ## Step 1
 
-Repository foundation: package setup, TypeScript, Vitest, Biome, community documents, and a single CI workflow. No compiler behavior.
+Repository foundation: package setup, TypeScript, Vitest, Biome, community documents, and a single CI workflow.
+
+## Step 2
+
+`compile(projectPath)` turns static TanStack `createFileRoute("...")` calls into framework-independent screens. Navigation is not included.
 
 ## Next
 
-Define the Product IR for screens and navigation against a real TanStack fixture, then implement:
-
-- Route and screen detection
 - Navigation detection for `<Link>`, `navigate()`, and `redirect()`
-- Writing `abbox.json`
+- Writing `abbox.json`, including `schemaVersion`
 - The real `abbox compile <path>` command
-
-The first framework-specific code belongs in `src/frameworks/tanstack/`.
 
 ## Deferred
 

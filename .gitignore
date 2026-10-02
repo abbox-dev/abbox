@@ -1,6 +1,12 @@
 node_modules/
 dist/
 coverage/
+
+# These fixture files exist so the skipped-directory test can be committed.
+!tests/fixtures/tanstack-file-routes/skipped-dirs/node_modules/
+!tests/fixtures/tanstack-file-routes/skipped-dirs/node_modules/**
+!tests/fixtures/tanstack-file-routes/skipped-dirs/dist/
+!tests/fixtures/tanstack-file-routes/skipped-dirs/dist/**
 *.tsbuildinfo
 .env
 .DS_Store

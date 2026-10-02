@@ -4,7 +4,9 @@ Abbox is an open-source compiler that analyzes application source code and produ
 
 ## Status
 
-This repository is the project foundation. The compiler is not implemented, and `abbox compile` is not available yet.
+`compile(projectPath)` reads a local project and returns Product IR for screens found in static TanStack file routes. Navigation, `abbox.json`, and the `abbox compile` command are not available yet.
+
+See [docs/IR.md](docs/IR.md).
 
 ## v0 target
 
