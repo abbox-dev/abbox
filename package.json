@@ -1,8 +1,17 @@
 {
   "name": "abbox",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Compiler that produces a framework-independent Product IR from application source code.",
+  "author": "Kamran Elchuzade",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abbox-dev/abbox.git"
+  },
+  "homepage": "https://github.com/abbox-dev/abbox#readme",
+  "bugs": {
+    "url": "https://github.com/abbox-dev/abbox/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=22.12"
@@ -25,7 +34,8 @@
     "test": "npm run build && vitest run",
     "test:watch": "vitest",
     "lint": "biome ci .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
