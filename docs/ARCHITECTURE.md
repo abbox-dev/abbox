@@ -4,7 +4,7 @@ Abbox compiles application source into a framework-independent Product IR. `comp
 
 ## Package
 
-Abbox is one npm package, not a monorepo. The package name is `abbox`, the version is `0.0.0`, and the license is Apache-2.0. It is not published yet. `private` is intentionally unset, and this step does not add a publish script.
+Abbox is one npm package, not a monorepo. The package name is `abbox`, the version is `0.1.0`, and the license is Apache-2.0. It is not published yet. `private` is intentionally unset, and this step does not add a publish script.
 
 The package is ESM. `package.json` `exports` maps the package root to `dist/index.js` and `dist/index.d.ts`. Tests and docs are not part of the published `files` list.
 
