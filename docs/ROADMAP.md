@@ -8,11 +8,13 @@ Repository foundation: package setup, TypeScript, Vitest, Biome, community docum
 
 `compile(projectPath)` turns static TanStack `createFileRoute("...")` calls into framework-independent screens. Navigation is not included.
 
+## Step 3
+
+`abbox compile` writes that Product IR to `abbox.json`, including `schemaVersion`.
+
 ## Next
 
 - Navigation detection for `<Link>`, `navigate()`, and `redirect()`
-- Writing `abbox.json`, including `schemaVersion`
-- The real `abbox compile <path>` command
 
 ## Deferred
 

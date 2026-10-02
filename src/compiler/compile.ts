@@ -1,7 +1,7 @@
 import { statSync } from "node:fs";
 import path from "node:path";
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
-import type { ProductIr } from "../ir/product-ir.js";
+import { type ProductIr, productIrSchemaVersion } from "../ir/product-ir.js";
 import {
   discoverSourceFiles,
   toProjectRelativePath,
@@ -25,6 +25,7 @@ export function compile(projectPath: string): ProductIr {
   const projectRoot = path.resolve(projectPath);
   const hits = collectFileRouteScreens(discoverSourceFiles(projectRoot));
   return {
+    schemaVersion: productIrSchemaVersion,
     screens: hits.map((hit) => ({
       route: hit.route,
       source: { file: toProjectRelativePath(projectRoot, hit.filePath) },

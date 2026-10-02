@@ -13,13 +13,16 @@
       "import": "./dist/index.js"
     }
   },
+  "bin": {
+    "abbox": "./dist/cli.js"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run",
+    "test": "npm run build && vitest run",
     "test:watch": "vitest",
     "lint": "biome ci .",
     "format": "biome check --write ."
