@@ -12,13 +12,18 @@ Repository foundation: package setup, TypeScript, Vitest, Biome, community docum
 
 `abbox compile` writes that Product IR to `abbox.json`, including `schemaVersion`.
 
+## Step 4
+
+Static TanStack `<Link>` navigation between discovered screens is written to `navigation` in Product IR.
+
 ## Next
 
-- Navigation detection for `<Link>`, `navigate()`, and `redirect()`
+- Imperative navigation via `useNavigate()` / `navigate()`
+- Redirects (`redirect()`, `<Navigate>`) as a separate product decision
 
 ## Deferred
 
-These are out of scope until the screens and navigation compiler exists:
+These are out of scope until the compiler grows beyond the current screens and Link navigation:
 
 - Actions, forms, and effects
 - Supabase, database access, server functions, and API calls

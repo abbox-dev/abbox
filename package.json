@@ -23,7 +23,7 @@
     }
   },
   "bin": {
-    "abbox": "./dist/cli.js"
+    "abbox": "dist/cli.js"
   },
   "files": [
     "dist"

@@ -1,6 +1,6 @@
 import { Node, Project, type SourceFile, SyntaxKind } from "ts-morph";
+import { importedLocalNames } from "./named-import.js";
 
-const tanstackRouterModule = "@tanstack/react-router";
 const createFileRouteName = "createFileRoute";
 
 interface FileRouteHit {
@@ -25,28 +25,8 @@ export function collectFileRouteScreens(
   return hits;
 }
 
-function importedLocalNames(sourceFile: SourceFile): Set<string> {
-  const names = new Set<string>();
-  for (const declaration of sourceFile.getImportDeclarations()) {
-    if (
-      declaration.isTypeOnly() ||
-      declaration.getModuleSpecifierValue() !== tanstackRouterModule
-    ) {
-      continue;
-    }
-
-    for (const named of declaration.getNamedImports()) {
-      if (named.isTypeOnly() || named.getName() !== createFileRouteName) {
-        continue;
-      }
-      names.add(named.getAliasNode()?.getText() ?? named.getName());
-    }
-  }
-  return names;
-}
-
 function screensInFile(sourceFile: SourceFile): FileRouteHit[] {
-  const names = importedLocalNames(sourceFile);
+  const names = importedLocalNames(sourceFile, createFileRouteName);
   if (names.size === 0) {
     return [];
   }
