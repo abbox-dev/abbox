@@ -11,12 +11,14 @@ function fixture(name: string): string {
 describe("compile screens", () => {
   it("extracts the root route", () => {
     expect(compile(fixture("root"))).toEqual({
+      schemaVersion: "1",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
     });
   });
 
   it("extracts /dashboard", () => {
     expect(compile(fixture("dashboard"))).toEqual({
+      schemaVersion: "1",
       screens: [
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
@@ -25,6 +27,7 @@ describe("compile screens", () => {
 
   it("preserves a dynamic segment", () => {
     expect(compile(fixture("dynamic-segment"))).toEqual({
+      schemaVersion: "1",
       screens: [
         {
           route: "/projects/$projectId",
@@ -37,6 +40,7 @@ describe("compile screens", () => {
   it("returns one screen per route file", () => {
     // Locks the current deterministic result. Screen order is not a Product IR contract.
     expect(compile(fixture("multiple"))).toEqual({
+      schemaVersion: "1",
       screens: [
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
         { route: "/", source: { file: "routes/index.tsx" } },
@@ -45,15 +49,22 @@ describe("compile screens", () => {
   });
 
   it("ignores unrelated TypeScript", () => {
-    expect(compile(fixture("unrelated"))).toEqual({ screens: [] });
+    expect(compile(fixture("unrelated"))).toEqual({
+      schemaVersion: "1",
+      screens: [],
+    });
   });
 
   it("ignores a local function named createFileRoute", () => {
-    expect(compile(fixture("local-name"))).toEqual({ screens: [] });
+    expect(compile(fixture("local-name"))).toEqual({
+      schemaVersion: "1",
+      screens: [],
+    });
   });
 
   it("follows a same-file import alias", () => {
     expect(compile(fixture("aliased"))).toEqual({
+      schemaVersion: "1",
       screens: [
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
@@ -62,12 +73,14 @@ describe("compile screens", () => {
 
   it("ignores non-literal route arguments", () => {
     expect(compile(fixture("non-literal"))).toEqual({
+      schemaVersion: "1",
       screens: [{ route: "/login", source: { file: "routes/login.tsx" } }],
     });
   });
 
   it("does not analyze skipped directories", () => {
     expect(compile(fixture("skipped-dirs"))).toEqual({
+      schemaVersion: "1",
       screens: [{ route: "/visible", source: { file: "src/app.tsx" } }],
     });
   });

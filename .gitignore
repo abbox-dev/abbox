@@ -7,6 +7,7 @@ coverage/
 !tests/fixtures/tanstack-file-routes/skipped-dirs/node_modules/**
 !tests/fixtures/tanstack-file-routes/skipped-dirs/dist/
 !tests/fixtures/tanstack-file-routes/skipped-dirs/dist/**
+/abbox.json
 *.tsbuildinfo
 .env
 .DS_Store

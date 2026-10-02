@@ -2,9 +2,18 @@
 
 Abbox is an open-source compiler that analyzes application source code and produces a framework-independent Product IR describing how the product works.
 
-## Status
+## Try it
 
-`compile(projectPath)` reads a local project and returns Product IR for screens found in static TanStack file routes. Navigation, `abbox.json`, and the `abbox compile` command are not available yet.
+From an application directory:
+
+```bash
+cd my-project
+npx abbox compile
+```
+
+This writes `abbox.json` in that directory. Open https://viewer.abbox.com and upload the generated file.
+
+`abbox.json` is a framework-independent description of the product. It is not specific to the Viewer, the CLI, or TanStack. Today it contains `schemaVersion` and screens found in static TanStack file routes. Navigation is not in the file yet. Commit `abbox.json` in the application repository.
 
 See [docs/IR.md](docs/IR.md).
 
