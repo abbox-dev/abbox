@@ -8,11 +8,14 @@ function fixture(name: string): string {
   );
 }
 
+const emptyNavigation = { navigation: [] as const };
+
 describe("compile screens", () => {
   it("extracts the root route", () => {
     expect(compile(fixture("root"))).toEqual({
       schemaVersion: "1",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
+      ...emptyNavigation,
     });
   });
 
@@ -22,6 +25,7 @@ describe("compile screens", () => {
       screens: [
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
+      ...emptyNavigation,
     });
   });
 
@@ -34,6 +38,7 @@ describe("compile screens", () => {
           source: { file: "routes/projects/$projectId.tsx" },
         },
       ],
+      ...emptyNavigation,
     });
   });
 
@@ -45,6 +50,7 @@ describe("compile screens", () => {
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
         { route: "/", source: { file: "routes/index.tsx" } },
       ],
+      ...emptyNavigation,
     });
   });
 
@@ -52,6 +58,7 @@ describe("compile screens", () => {
     expect(compile(fixture("unrelated"))).toEqual({
       schemaVersion: "1",
       screens: [],
+      ...emptyNavigation,
     });
   });
 
@@ -59,6 +66,7 @@ describe("compile screens", () => {
     expect(compile(fixture("local-name"))).toEqual({
       schemaVersion: "1",
       screens: [],
+      ...emptyNavigation,
     });
   });
 
@@ -68,6 +76,7 @@ describe("compile screens", () => {
       screens: [
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
+      ...emptyNavigation,
     });
   });
 
@@ -75,6 +84,7 @@ describe("compile screens", () => {
     expect(compile(fixture("non-literal"))).toEqual({
       schemaVersion: "1",
       screens: [{ route: "/login", source: { file: "routes/login.tsx" } }],
+      ...emptyNavigation,
     });
   });
 
@@ -82,6 +92,7 @@ describe("compile screens", () => {
     expect(compile(fixture("skipped-dirs"))).toEqual({
       schemaVersion: "1",
       screens: [{ route: "/visible", source: { file: "src/app.tsx" } }],
+      ...emptyNavigation,
     });
   });
 

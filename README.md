@@ -13,15 +13,15 @@ npx abbox compile
 
 This writes `abbox.json` in that directory. Open https://viewer.abbox.com and upload the generated file.
 
-`abbox.json` is a framework-independent description of the product. It is not specific to the Viewer, the CLI, or TanStack. Today it contains `schemaVersion` and screens found in static TanStack file routes. Navigation is not in the file yet. Commit `abbox.json` in the application repository.
+`abbox.json` is a framework-independent description of the product. It is not specific to the Viewer, the CLI, or TanStack. It contains `schemaVersion`, screens found in static TanStack file routes, and `navigation` edges between discovered screens from static TanStack `<Link>` elements. Commit `abbox.json` in the application repository.
 
 See [docs/IR.md](docs/IR.md).
 
 ## This release
 
-`abbox@0.1.0` writes screens found in static TanStack `createFileRoute("...")` calls. A route literal is kept as written, including a dynamic segment such as `/projects/$projectId`.
+`abbox@0.1.0` writes screens found in static TanStack `createFileRoute("...")` calls. A route literal is kept as written, including a dynamic segment such as `/projects/$projectId`. This repository also implements Link navigation in Product IR; that output appears after you compile with a build that includes navigation extraction.
 
-Not extracted yet: navigation (`<Link>`, `navigate()`, `redirect()`), actions, forms, APIs, auth, and other frameworks.
+Not extracted yet: `navigate()`, `redirect()`, actions, forms, APIs, auth, and other frameworks.
 
 Framework-specific interpretation stays in compiler code. The Product IR does not expose framework or parser types.
 
