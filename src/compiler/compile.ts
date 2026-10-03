@@ -1,9 +1,14 @@
 import { statSync } from "node:fs";
 import path from "node:path";
 import { extractDesignSystem } from "../frameworks/css/theme-colors.js";
+import {
+  type ActionCandidate,
+  collectActionCandidates,
+} from "../frameworks/react/actions.js";
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
 import { collectStaticLinks } from "../frameworks/tanstack/links.js";
 import {
+  type Action,
   emptyDesignSystem,
   type Navigation,
   type ProductIr,
@@ -39,6 +44,8 @@ export function compile(projectPath: string): ProductIr {
   const knownRoutes = new Set(routeHits.map((hit) => hit.route));
 
   const navigation = buildNavigation(screensByFile, linkHits, knownRoutes);
+  const actionCandidates = collectActionCandidates(files);
+  const actions = buildActions(projectRoot, screensByFile, actionCandidates);
   const cssFiles = discoverStylesheetFiles(projectRoot);
   const designSystem =
     cssFiles.length === 0
@@ -53,7 +60,67 @@ export function compile(projectPath: string): ProductIr {
     })),
     navigation,
     designSystem,
+    actions,
   };
+}
+
+function buildActions(
+  projectRoot: string,
+  screensByFile: Map<string, string[]>,
+  candidates: readonly ActionCandidate[],
+): Action[] {
+  const actions: Array<Action & { discoveryIndex: number }> = [];
+
+  for (const candidate of candidates) {
+    const routesInFile = screensByFile.get(candidate.filePath);
+    if (routesInFile === undefined || routesInFile.length !== 1) {
+      continue;
+    }
+
+    const route = routesInFile[0];
+    if (route === undefined) {
+      continue;
+    }
+
+    const action: Action & { discoveryIndex: number } = {
+      route,
+      kind: candidate.kind,
+      source: {
+        file: toProjectRelativePath(projectRoot, candidate.filePath),
+      },
+      discoveryIndex: candidate.discoveryIndex,
+    };
+    if (candidate.label !== undefined) {
+      action.label = candidate.label;
+    }
+    actions.push(action);
+  }
+
+  const labelSortKey = (label: string | undefined): string => label ?? "";
+
+  actions.sort((left, right) => {
+    const byRoute = left.route.localeCompare(right.route);
+    if (byRoute !== 0) {
+      return byRoute;
+    }
+    const byKind = left.kind.localeCompare(right.kind);
+    if (byKind !== 0) {
+      return byKind;
+    }
+    const byLabel = labelSortKey(left.label).localeCompare(
+      labelSortKey(right.label),
+    );
+    if (byLabel !== 0) {
+      return byLabel;
+    }
+    const byFile = left.source.file.localeCompare(right.source.file);
+    if (byFile !== 0) {
+      return byFile;
+    }
+    return left.discoveryIndex - right.discoveryIndex;
+  });
+
+  return actions.map(({ discoveryIndex: _, ...action }) => action);
 }
 
 function groupRoutesByFile(

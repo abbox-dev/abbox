@@ -39,7 +39,17 @@
         "colors": []
       }
     ]
-  }
+  },
+  "actions": [
+    {
+      "route": "/",
+      "kind": "invoke",
+      "label": "Save",
+      "source": {
+        "file": "routes/index.tsx"
+      }
+    }
+  ]
 }
 ```
 
@@ -66,4 +76,22 @@ Themes are emitted in order: `default`, then `dark`. Only selectors that match e
 
 Each color token has `name`, `value`, optional `hex`, and `source.file`. `value` is the resolved physical color when alias resolution succeeds; otherwise the declared text. `hex` is uppercase canonical sRGB `#RRGGBB` or `#RRGGBBAA` when the value is a single static color. Conflicting declarations with the same theme and name but different values are all kept. Exact duplicates with the same theme, name, value, and `source.file` collapse to one entry. Near-identical colors are never merged.
 
-`navigate()`, `redirect()`, actual color usage in components, and line or column positions are not in this IR yet.
+`actions` is always present. It lists user interaction affordances the compiler can attribute to a discovered screen.
+
+An action is recorded only in a source file that defines exactly one extracted screen. Actions in shared components, files without a screen, or files with more than one extracted screen are omitted.
+
+`kind` is `invoke` or `submit`. `invoke` means the user can activate a control with a statically recognized handler. `submit` means the user can submit a form with a statically recognized `onSubmit` handler. These names describe product interaction, not DOM event types.
+
+Supported JSX in v1 (compiler rules, not IR fields):
+
+- Native `<button>` with recognized `onClick`
+- Native `<form>` with recognized `onSubmit`
+- `<Button>` with recognized `onClick` when `Button` is a named import from a `ui/button` module path (for example `@/components/ui/button` or a relative path ending in `components/ui/button` or `ui/button`)
+
+Recognized handlers are identifier references, arrow functions, or function expressions only. Conditional, logical, call, and member-expression handlers are not recognized.
+
+Optional `label` comes from a static `aria-label` or from static JSX text children (whitespace normalized). If any JSX expression appears among those children at any depth, the child-derived label is omitted rather than partially reconstructed from surrounding static text. Expression-only children therefore omit the label; a static `aria-label` still wins over dynamic children.
+
+A form with `onSubmit` emits one `submit` action. Descendant `type="button"` controls with recognized `onClick` still emit `invoke`. A native `<button>` without `type` inside a form is treated as a submit control; it does not emit `invoke` without its own recognized `onClick`. A submit control with its own recognized `onClick` may emit `invoke` in addition to the form `submit`.
+
+TanStack `<Link>` navigation is not duplicated as actions. Handler bodies, effects, API calls, `navigate()`, `redirect()`, actual color usage in components, and line or column positions are not in this IR yet.
