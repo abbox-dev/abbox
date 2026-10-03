@@ -1,8 +1,10 @@
 import { statSync } from "node:fs";
 import path from "node:path";
+import { extractDesignSystem } from "../frameworks/css/theme-colors.js";
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
 import { collectStaticLinks } from "../frameworks/tanstack/links.js";
 import {
+  emptyDesignSystem,
   type Navigation,
   type ProductIr,
   productIrSchemaVersion,
@@ -11,6 +13,7 @@ import {
   discoverSourceFiles,
   toProjectRelativePath,
 } from "./discover-source-files.js";
+import { discoverStylesheetFiles } from "./discover-stylesheet-files.js";
 
 export function compile(projectPath: string): ProductIr {
   let stats: ReturnType<typeof statSync>;
@@ -36,6 +39,11 @@ export function compile(projectPath: string): ProductIr {
   const knownRoutes = new Set(routeHits.map((hit) => hit.route));
 
   const navigation = buildNavigation(screensByFile, linkHits, knownRoutes);
+  const cssFiles = discoverStylesheetFiles(projectRoot);
+  const designSystem =
+    cssFiles.length === 0
+      ? emptyDesignSystem
+      : extractDesignSystem(projectRoot, cssFiles);
 
   return {
     schemaVersion: productIrSchemaVersion,
@@ -44,6 +52,7 @@ export function compile(projectPath: string): ProductIr {
       source: { file: toProjectRelativePath(projectRoot, hit.filePath) },
     })),
     navigation,
+    designSystem,
   };
 }
 
