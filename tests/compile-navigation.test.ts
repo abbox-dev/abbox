@@ -16,6 +16,7 @@ function screens(...entries: { route: string; file: string }[]) {
 }
 
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
+const emptyActions = { actions: [] as const };
 
 describe("compile navigation", () => {
   it("links from / to a discovered /projects screen", () => {
@@ -27,6 +28,7 @@ describe("compile navigation", () => {
       ),
       navigation: [{ from: "/", to: "/projects" }],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -39,6 +41,7 @@ describe("compile navigation", () => {
       ),
       navigation: [{ from: "/", to: "/projects" }],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -51,6 +54,7 @@ describe("compile navigation", () => {
       ),
       navigation: [{ from: "/", to: "/settings" }],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -68,6 +72,7 @@ describe("compile navigation", () => {
         { from: "/", to: "/settings" },
       ],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -83,6 +88,7 @@ describe("compile navigation", () => {
       ),
       navigation: [{ from: "/", to: "/projects/$projectId" }],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -95,6 +101,7 @@ describe("compile navigation", () => {
       ),
       navigation: [{ from: "/", to: "/projects" }],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -107,6 +114,20 @@ describe("compile navigation", () => {
       ),
       navigation: [{ from: "/", to: "/projects" }],
       ...emptyDesignSystem,
+      actions: [
+        {
+          route: "/",
+          kind: "invoke",
+          label: "Navigate",
+          source: { file: "routes/index.tsx" },
+        },
+        {
+          route: "/",
+          kind: "invoke",
+          label: "Redirect",
+          source: { file: "routes/index.tsx" },
+        },
+      ],
     });
   });
 
@@ -116,6 +137,7 @@ describe("compile navigation", () => {
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       navigation: [],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -128,6 +150,7 @@ describe("compile navigation", () => {
       ),
       navigation: [],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -140,6 +163,7 @@ describe("compile navigation", () => {
       ),
       navigation: [],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -152,6 +176,7 @@ describe("compile navigation", () => {
       ),
       navigation: [],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -164,6 +189,7 @@ describe("compile navigation", () => {
       ),
       navigation: [],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -176,6 +202,7 @@ describe("compile navigation", () => {
       ),
       navigation: [],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -188,6 +215,7 @@ describe("compile navigation", () => {
       ],
       navigation: [],
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 });

@@ -34,11 +34,23 @@ export interface DesignSystem {
   themes: DesignSystemTheme[];
 }
 
+export interface ActionSource {
+  file: string;
+}
+
+export interface Action {
+  route: string;
+  kind: "invoke" | "submit";
+  label?: string;
+  source: ActionSource;
+}
+
 export interface ProductIr {
   schemaVersion: typeof productIrSchemaVersion;
   screens: Screen[];
   navigation: Navigation[];
   designSystem: DesignSystem;
+  actions: Action[];
 }
 
 export const emptyDesignSystem: DesignSystem = { themes: [] };

@@ -10,6 +10,7 @@ function fixture(name: string): string {
 
 const emptyNavigation = { navigation: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
+const emptyActions = { actions: [] as const };
 
 describe("compile screens", () => {
   it("extracts the root route", () => {
@@ -18,6 +19,7 @@ describe("compile screens", () => {
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -29,6 +31,7 @@ describe("compile screens", () => {
       ],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -43,6 +46,7 @@ describe("compile screens", () => {
       ],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -56,6 +60,7 @@ describe("compile screens", () => {
       ],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -65,6 +70,7 @@ describe("compile screens", () => {
       screens: [],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -74,6 +80,7 @@ describe("compile screens", () => {
       screens: [],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -85,6 +92,7 @@ describe("compile screens", () => {
       ],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -94,6 +102,7 @@ describe("compile screens", () => {
       screens: [{ route: "/login", source: { file: "routes/login.tsx" } }],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 
@@ -103,6 +112,7 @@ describe("compile screens", () => {
       screens: [{ route: "/visible", source: { file: "src/app.tsx" } }],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyActions,
     });
   });
 

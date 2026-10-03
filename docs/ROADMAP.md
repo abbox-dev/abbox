@@ -20,17 +20,21 @@ Static TanStack `<Link>` navigation between discovered screens is written to `na
 
 Declared design-system colors from CSS `:root` / `.dark` and `@theme` semantic mappings are written to `designSystem.themes`, with optional canonical `hex`.
 
+## Step 6
+
+Static JSX actions on discovered screens: native `button` / `form` and shadcn-style `Button` from `ui/button` imports, with conservative labels and same-file screen ownership.
+
 ## Next
 
 - Actual design usage (Tailwind classes, inline styles, component CSS)
 - Imperative navigation via `useNavigate()` / `navigate()`
 - Redirects (`redirect()`, `<Navigate>`) as a separate product decision
+- Handler-body and effects analysis
 
 ## Deferred
 
 - Design drift analytics and visual similarity in Viewer/Cloud
 - Non-color design tokens (spacing, typography, radii)
-- Actions, forms, and effects
 - Supabase, database access, server functions, and API calls
 - Authentication analysis
 - Frameworks other than TanStack Start / TanStack Router
