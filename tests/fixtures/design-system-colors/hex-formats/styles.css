@@ -1,0 +1,6 @@
+:root {
+  --hex: #336699;
+  --rgb: rgb(128 64 32);
+  --rgba: rgba(10 20 30 / 0.5);
+  --named: transparent;
+}

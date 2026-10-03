@@ -1,0 +1,14 @@
+@theme inline {
+  --color-primary: var(--primary);
+  --color-background: var(--background);
+}
+
+:root {
+  --primary: oklch(0.46 0.13 296);
+  --background: oklch(0.99 0 0);
+}
+
+.dark {
+  --primary: oklch(0.65 0.15 296);
+  --background: oklch(0.15 0 0);
+}

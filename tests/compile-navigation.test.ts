@@ -15,6 +15,8 @@ function screens(...entries: { route: string; file: string }[]) {
   }));
 }
 
+const emptyDesignSystem = { designSystem: { themes: [] as const } };
+
 describe("compile navigation", () => {
   it("links from / to a discovered /projects screen", () => {
     expect(compile(fixture("direct"))).toEqual({
@@ -24,6 +26,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [{ from: "/", to: "/projects" }],
+      ...emptyDesignSystem,
     });
   });
 
@@ -35,6 +38,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [{ from: "/", to: "/projects" }],
+      ...emptyDesignSystem,
     });
   });
 
@@ -46,6 +50,7 @@ describe("compile navigation", () => {
         { route: "/settings", file: "routes/settings.tsx" },
       ),
       navigation: [{ from: "/", to: "/settings" }],
+      ...emptyDesignSystem,
     });
   });
 
@@ -62,6 +67,7 @@ describe("compile navigation", () => {
         { from: "/", to: "/dashboard" },
         { from: "/", to: "/settings" },
       ],
+      ...emptyDesignSystem,
     });
   });
 
@@ -76,6 +82,7 @@ describe("compile navigation", () => {
         },
       ),
       navigation: [{ from: "/", to: "/projects/$projectId" }],
+      ...emptyDesignSystem,
     });
   });
 
@@ -87,6 +94,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [{ from: "/", to: "/projects" }],
+      ...emptyDesignSystem,
     });
   });
 
@@ -98,6 +106,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [{ from: "/", to: "/projects" }],
+      ...emptyDesignSystem,
     });
   });
 
@@ -106,6 +115,7 @@ describe("compile navigation", () => {
       schemaVersion: "1",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       navigation: [],
+      ...emptyDesignSystem,
     });
   });
 
@@ -117,6 +127,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [],
+      ...emptyDesignSystem,
     });
   });
 
@@ -128,6 +139,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [],
+      ...emptyDesignSystem,
     });
   });
 
@@ -139,6 +151,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [],
+      ...emptyDesignSystem,
     });
   });
 
@@ -150,6 +163,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [],
+      ...emptyDesignSystem,
     });
   });
 
@@ -161,6 +175,7 @@ describe("compile navigation", () => {
         { route: "/projects", file: "routes/projects.tsx" },
       ),
       navigation: [],
+      ...emptyDesignSystem,
     });
   });
 
@@ -172,6 +187,7 @@ describe("compile navigation", () => {
         { route: "/about", source: { file: "routes/index.tsx" } },
       ],
       navigation: [],
+      ...emptyDesignSystem,
     });
   });
 });

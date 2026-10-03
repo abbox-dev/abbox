@@ -9,6 +9,7 @@ function fixture(name: string): string {
 }
 
 const emptyNavigation = { navigation: [] as const };
+const emptyDesignSystem = { designSystem: { themes: [] as const } };
 
 describe("compile screens", () => {
   it("extracts the root route", () => {
@@ -16,6 +17,7 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 
@@ -26,6 +28,7 @@ describe("compile screens", () => {
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 
@@ -39,6 +42,7 @@ describe("compile screens", () => {
         },
       ],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 
@@ -51,6 +55,7 @@ describe("compile screens", () => {
         { route: "/", source: { file: "routes/index.tsx" } },
       ],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 
@@ -59,6 +64,7 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 
@@ -67,6 +73,7 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 
@@ -77,6 +84,7 @@ describe("compile screens", () => {
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 
@@ -85,6 +93,7 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [{ route: "/login", source: { file: "routes/login.tsx" } }],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 
@@ -93,6 +102,7 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [{ route: "/visible", source: { file: "src/app.tsx" } }],
       ...emptyNavigation,
+      ...emptyDesignSystem,
     });
   });
 

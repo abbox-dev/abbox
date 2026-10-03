@@ -16,15 +16,20 @@ Repository foundation: package setup, TypeScript, Vitest, Biome, community docum
 
 Static TanStack `<Link>` navigation between discovered screens is written to `navigation` in Product IR.
 
+## Step 5
+
+Declared design-system colors from CSS `:root` / `.dark` and `@theme` semantic mappings are written to `designSystem.themes`, with optional canonical `hex`.
+
 ## Next
 
+- Actual design usage (Tailwind classes, inline styles, component CSS)
 - Imperative navigation via `useNavigate()` / `navigate()`
 - Redirects (`redirect()`, `<Navigate>`) as a separate product decision
 
 ## Deferred
 
-These are out of scope until the compiler grows beyond the current screens and Link navigation:
-
+- Design drift analytics and visual similarity in Viewer/Cloud
+- Non-color design tokens (spacing, typography, radii)
 - Actions, forms, and effects
 - Supabase, database access, server functions, and API calls
 - Authentication analysis

@@ -1,5 +1,9 @@
 export { compile } from "./compiler/compile.js";
 export type {
+  ColorTokenSource,
+  DesignSystem,
+  DesignSystemColorToken,
+  DesignSystemTheme,
   Navigation,
   ProductIr,
   Screen,
