@@ -19,9 +19,9 @@ See [docs/IR.md](docs/IR.md).
 
 ## This release
 
-`abbox@0.1.0` writes screens found in static TanStack `createFileRoute("...")` calls. A route literal is kept as written, including a dynamic segment such as `/projects/$projectId`. This repository also implements Link navigation in Product IR; that output appears after you compile with a build that includes navigation extraction.
+`abbox@0.1.0` writes screens found in static TanStack `createFileRoute("...")` calls. `Screen.route` is the user-facing destination. A dynamic segment such as `/projects/$projectId` is kept. An index route id such as `/programs/` is the destination `/programs`, not a second screen. When a parent route module and its index route are the same destination, the index module owns that screen. This repository also implements Link navigation in Product IR; that output appears after you compile with a build that includes navigation extraction.
 
-Not extracted yet: handler effects, API calls, `navigate()` / `redirect()` as navigation, actual color usage in components, APIs, auth, and other frameworks.
+An action's `effects` list the supported direct consequences extracted from its handler: a React state write, or a TanStack search update that stays on the current destination. `"effects": []` means no supported effect was extracted, not that the action does nothing. Not extracted yet: API calls, `navigate()` / `redirect()` as screen navigation, actual color usage in components, APIs, auth, and other frameworks.
 
 Framework-specific interpretation stays in compiler code. The Product IR does not expose framework or parser types.
 

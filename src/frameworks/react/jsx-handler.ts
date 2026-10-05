@@ -1,4 +1,4 @@
-import { type JsxAttributeLike, Node } from "ts-morph";
+import { type Expression, type JsxAttributeLike, Node } from "ts-morph";
 
 type JsxAttributeInitializer = ReturnType<
   import("ts-morph").JsxAttribute["getInitializer"]
@@ -25,34 +25,36 @@ export function hasRecognizedHandler(
   attributes: readonly JsxAttributeLike[],
   name: HandlerAttributeName,
 ): boolean {
-  const attribute = findJsxAttribute(attributes, name);
-  if (attribute === undefined) {
-    return false;
-  }
-  return isRecognizedHandlerInitializer(attribute.getInitializer());
+  return recognizedHandlerExpression(attributes, name) !== undefined;
 }
 
-function isRecognizedHandlerInitializer(
-  initializer: JsxAttributeInitializer,
-): boolean {
-  if (initializer === undefined) {
-    return false;
+export function recognizedHandlerExpression(
+  attributes: readonly JsxAttributeLike[],
+  name: HandlerAttributeName,
+): Expression | undefined {
+  const attribute = findJsxAttribute(attributes, name);
+  if (attribute === undefined) {
+    return undefined;
   }
-  if (!Node.isJsxExpression(initializer)) {
-    return false;
+  return handlerExpressionFromInitializer(attribute.getInitializer());
+}
+
+function handlerExpressionFromInitializer(
+  initializer: JsxAttributeInitializer,
+): Expression | undefined {
+  if (initializer === undefined || !Node.isJsxExpression(initializer)) {
+    return undefined;
   }
   const expression = initializer.getExpression();
   if (expression === undefined) {
-    return false;
+    return undefined;
   }
-  if (Node.isIdentifier(expression)) {
-    return true;
+  if (
+    Node.isIdentifier(expression) ||
+    Node.isArrowFunction(expression) ||
+    Node.isFunctionExpression(expression)
+  ) {
+    return expression;
   }
-  if (Node.isArrowFunction(expression)) {
-    return true;
-  }
-  if (Node.isFunctionExpression(expression)) {
-    return true;
-  }
-  return false;
+  return undefined;
 }

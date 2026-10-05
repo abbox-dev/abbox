@@ -5,7 +5,9 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "ts-morph";
-import { hasRecognizedHandler } from "./jsx-handler.js";
+import type { Effect } from "../../ir/product-ir.js";
+import { effectsFromHandler } from "./handler-effects.js";
+import { recognizedHandlerExpression } from "./jsx-handler.js";
 import { extractStaticLabel } from "./jsx-label.js";
 import { importedUiButtonLocalNames } from "./ui-button-import.js";
 
@@ -13,6 +15,7 @@ export interface ActionCandidate {
   filePath: string;
   kind: "invoke" | "submit";
   label?: string;
+  effects: Effect[];
   discoveryIndex: number;
 }
 
@@ -54,12 +57,14 @@ function candidatesInFile(
   )) {
     const opening = element.getOpeningElement();
     if (isFormOpening(opening)) {
-      if (hasRecognizedHandler(opening.getAttributes(), "onSubmit")) {
-        candidates.push({
-          filePath,
-          kind: "submit",
-          discoveryIndex: nextIndex(),
-        });
+      const candidate = submitFromElement(
+        sourceFile,
+        opening.getAttributes(),
+        filePath,
+        nextIndex,
+      );
+      if (candidate !== undefined) {
+        candidates.push(candidate);
       }
     }
   }
@@ -68,12 +73,14 @@ function candidatesInFile(
     SyntaxKind.JsxSelfClosingElement,
   )) {
     if (isFormSelfClosing(element)) {
-      if (hasRecognizedHandler(element.getAttributes(), "onSubmit")) {
-        candidates.push({
-          filePath,
-          kind: "submit",
-          discoveryIndex: nextIndex(),
-        });
+      const candidate = submitFromElement(
+        sourceFile,
+        element.getAttributes(),
+        filePath,
+        nextIndex,
+      );
+      if (candidate !== undefined) {
+        candidates.push(candidate);
       }
     }
   }
@@ -82,6 +89,7 @@ function candidatesInFile(
     SyntaxKind.JsxSelfClosingElement,
   )) {
     const candidate = invokeFromInteractiveElement(
+      sourceFile,
       element,
       element.getTagNameNode(),
       element.getAttributes(),
@@ -99,6 +107,7 @@ function candidatesInFile(
   )) {
     const opening = element.getOpeningElement();
     const candidate = invokeFromInteractiveElement(
+      sourceFile,
       element,
       opening.getTagNameNode(),
       opening.getAttributes(),
@@ -114,7 +123,26 @@ function candidatesInFile(
   return candidates;
 }
 
+function submitFromElement(
+  sourceFile: import("ts-morph").SourceFile,
+  attributes: readonly JsxAttributeLike[],
+  filePath: string,
+  nextIndex: () => number,
+): ActionCandidate | undefined {
+  const handler = recognizedHandlerExpression(attributes, "onSubmit");
+  if (handler === undefined) {
+    return undefined;
+  }
+  return {
+    filePath,
+    kind: "submit",
+    effects: effectsFromHandler(sourceFile, handler),
+    discoveryIndex: nextIndex(),
+  };
+}
+
 function invokeFromInteractiveElement(
+  sourceFile: import("ts-morph").SourceFile,
   element:
     | import("ts-morph").JsxElement
     | import("ts-morph").JsxSelfClosingElement,
@@ -127,7 +155,8 @@ function invokeFromInteractiveElement(
   if (!isInteractiveButton(tagName, uiButtonNames)) {
     return undefined;
   }
-  if (!hasRecognizedHandler(attributes, "onClick")) {
+  const handler = recognizedHandlerExpression(attributes, "onClick");
+  if (handler === undefined) {
     return undefined;
   }
 
@@ -136,6 +165,7 @@ function invokeFromInteractiveElement(
     filePath,
     kind: "invoke",
     label,
+    effects: effectsFromHandler(sourceFile, handler),
     discoveryIndex: nextIndex(),
   };
 }
