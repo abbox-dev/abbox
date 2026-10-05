@@ -50,6 +50,18 @@
       },
       "effects": []
     }
+  ],
+  "entities": [
+    {
+      "name": "Customer",
+      "fields": [
+        { "name": "id" },
+        { "name": "name" }
+      ],
+      "source": {
+        "file": "src/data/models.ts"
+      }
+    }
   ]
 }
 ```
@@ -114,3 +126,20 @@ Only a concise arrow call, or a call statement at the top of that body, is inspe
 `kind: "submit"` remains an action kind. It is not an effect. `preventDefault()` is not an effect. Only handler calls that independently match `state` or `search` are effects. `navigation` is unchanged: static `<Link>` screen edges, not search effects and not imperative navigation.
 
 Storage, network, mutations, server functions, imported helpers, writes that happen later in `useEffect`, input or select changes, and clicks that are not already actions are not effects.
+
+`entities` is always present. It lists product record concepts the compiler can justify from static evidence in v1.
+
+An **entity** is a named product concept representing a kind of record the application works with. That meaning is not defined by TypeScript syntax, database tables, or naming conventions. V1 uses one **evidence** rule to decide when to emit an entity in IR; future milestones may prove the same concept from databases, APIs, loaders, or schemas.
+
+V1 evidence (compiler rule, same file only):
+
+- An exported top-level `interface N { ... }` or `type N = { ... }` with an object type literal body, and
+- An exported top-level `const` explicitly typed `N[]` or `Array<N>`.
+
+Fields come only from that type or interface: supported property signatures with identifier names, plus `optional: true` when the property is declared optional. Unsupported members are ignored. If no supported fields remain, the entity is omitted. Field TypeScript types, relationships, and nested schemas are not emitted.
+
+If the same entity `name` is independently evidenced in more than one source file, that name is treated as ambiguous and no entity with that name is emitted. Entities are not merged and duplicate names are not emitted.
+
+Entities are sorted by `name`, then `source.file`. Fields are sorted by `name`.
+
+Entity usage on screens, actions, or effects, route-parameter inference, Supabase or SQL, loaders, React Query, APIs, and cross-file type resolution are not in this IR yet.

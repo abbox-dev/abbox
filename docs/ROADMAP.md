@@ -24,17 +24,26 @@ Declared design-system colors from CSS `:root` / `.dark` and `@theme` semantic m
 
 Static JSX actions on discovered screens: native `button` / `form` and shadcn-style `Button` from `ui/button` imports, with conservative labels and same-file screen ownership.
 
+## Step 7
+
+Action effects from supported handler bodies: React `useState` writes and TanStack search updates on the current destination, nested on each action.
+
+## Step 8
+
+Entities from exported object types paired with exported typed collections in the same module, with field names and ambiguity omission.
+
 ## Next
 
 - Actual design usage (Tailwind classes, inline styles, component CSS)
-- Imperative navigation via `useNavigate()` / `navigate()`
+- Imperative navigation via `useNavigate()` / `navigate()` as screen navigation
 - Redirects (`redirect()`, `<Navigate>`) as a separate product decision
-- Handler-body and effects analysis
+- Additional entity evidence (databases, APIs, loaders)
 
 ## Deferred
 
 - Design drift analytics and visual similarity in Viewer/Cloud
 - Non-color design tokens (spacing, typography, radii)
+- Entity usage on screens, actions, or effects
 - Supabase, database access, server functions, and API calls
 - Authentication analysis
 - Frameworks other than TanStack Start / TanStack Router

@@ -13,7 +13,7 @@ npx abbox compile
 
 This writes `abbox.json` in that directory. Open https://viewer.abbox.com and upload the generated file.
 
-`abbox.json` is a framework-independent description of the product. It is not specific to the Viewer, the CLI, or TanStack. It contains `schemaVersion`, screens, `navigation` from static TanStack `<Link>` elements, `designSystem.themes` from declared CSS `:root` / `.dark` and `@theme` color tokens, and `actions` from static JSX buttons and forms on discovered screens. Commit `abbox.json` in the application repository.
+`abbox.json` is a framework-independent description of the product. It is not specific to the Viewer, the CLI, or TanStack. It contains `schemaVersion`, screens, `navigation` from static TanStack `<Link>` elements, `designSystem.themes` from declared CSS `:root` / `.dark` and `@theme` color tokens, `actions` (with nested `effects`) from static JSX buttons and forms on discovered screens, and `entities` from declared TypeScript models when the v1 evidence rule matches. Commit `abbox.json` in the application repository.
 
 See [docs/IR.md](docs/IR.md).
 
