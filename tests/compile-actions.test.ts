@@ -32,6 +32,7 @@ function invoke(
     route,
     kind: "invoke" as const,
     source: { file },
+    effects: [] as const,
   };
   if (label !== undefined) {
     return { ...action, label };
@@ -44,6 +45,7 @@ function submit(route: string, file: string) {
     route,
     kind: "submit" as const,
     source: { file },
+    effects: [] as const,
   };
 }
 

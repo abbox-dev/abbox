@@ -1,4 +1,5 @@
 import { Node, Project, type SourceFile, SyntaxKind } from "ts-morph";
+import { fileRouteDestination } from "./file-routes.js";
 import { importedLocalNames } from "./named-import.js";
 
 const linkExportName = "Link";
@@ -106,5 +107,5 @@ function absoluteRouteLiteral(text: string): string | undefined {
   if (text.length === 0 || !text.startsWith("/") || text.startsWith("//")) {
     return undefined;
   }
-  return text;
+  return fileRouteDestination(text);
 }

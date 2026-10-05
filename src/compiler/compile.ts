@@ -88,6 +88,7 @@ function buildActions(
       source: {
         file: toProjectRelativePath(projectRoot, candidate.filePath),
       },
+      effects: candidate.effects,
       discoveryIndex: candidate.discoveryIndex,
     };
     if (candidate.label !== undefined) {

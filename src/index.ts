@@ -6,9 +6,12 @@ export type {
   DesignSystem,
   DesignSystemColorToken,
   DesignSystemTheme,
+  Effect,
   Navigation,
   ProductIr,
   Screen,
   ScreenSource,
+  SearchEffect,
+  StateEffect,
 } from "./ir/product-ir.js";
 export { productIrSchemaVersion } from "./ir/product-ir.js";

@@ -120,12 +120,14 @@ describe("compile navigation", () => {
           kind: "invoke",
           label: "Navigate",
           source: { file: "routes/index.tsx" },
+          effects: [],
         },
         {
           route: "/",
           kind: "invoke",
           label: "Redirect",
           source: { file: "routes/index.tsx" },
+          effects: [],
         },
       ],
     });

@@ -47,7 +47,8 @@
       "label": "Save",
       "source": {
         "file": "routes/index.tsx"
-      }
+      },
+      "effects": []
     }
   ]
 }
@@ -55,13 +56,15 @@
 
 `schemaVersion` is the Product IR contract, not the npm package version. It is the string `"1"`. It becomes `"2"`, `"3"`, and so on only when an existing field is removed, renamed, changes type, or changes meaning. Adding a compatible field does not change it. Readers ignore unknown fields. A missing additive field means that part of the product is not present.
 
-`route` is the string literal passed to `createFileRoute`. `source.file` is the project-relative path using `/` separators.
+`route` is the user-facing destination. `source.file` is the project-relative path of the module that owns that destination, using `/` separators.
 
-A screen is recorded only when that call uses a direct named import of `createFileRoute` from `@tanstack/react-router` in the same file. A same-file alias such as `import { createFileRoute as fileRoute }` counts. A local function named `createFileRoute` does not. A non-literal argument does not.
+A screen is recorded only when that call uses a direct named import of `createFileRoute` from `@tanstack/react-router` in the same file and the argument is a string literal. A same-file alias such as `import { createFileRoute as fileRoute }` counts. A local function named `createFileRoute` does not. A non-literal argument does not.
+
+That literal is a TanStack file-route id. An index id is the destination plus a trailing `/`. The root id `"/"` is already the destination `/`. The screen route is the destination, so `createFileRoute("/programs/")` becomes `/programs`. When an index id owns a destination, the parent module whose id is that same destination is not a separate screen, and `source.file` is the index module. A parent id with no index id remains the screen for that destination. When more than one index id resolves to the same destination, that destination is omitted.
 
 The order of `screens` is not part of the Product IR contract.
 
-`navigation` lists known screen-to-screen relationships. Every `navigation.from` and every `navigation.to` is a discovered `Screen.route`. An entry is recorded only when a TanStack `<Link>` in the same file as exactly one extracted screen uses a static absolute `to` literal that exactly matches another discovered screen route. Links in shared components, layout files without a single screen, or files with more than one extracted screen are omitted. Duplicate links between the same two routes collapse to one entry. The order of `navigation` is not part of the Product IR contract.
+`navigation` lists known screen-to-screen relationships. Every `navigation.from` and every `navigation.to` is a discovered `Screen.route`. An entry is recorded only when a TanStack `<Link>` in the same file as exactly one extracted screen uses a static absolute `to` that resolves to another discovered screen destination. A TanStack index route id used as `to` resolves through the same destination rule as screens. Links in shared components, files that do not own exactly one screen, or files with more than one extracted screen are omitted. Duplicate links between the same two routes collapse to one entry. The order of `navigation` is not part of the Product IR contract.
 
 `designSystem.themes` is always present. It is empty when no recognized runtime theme exists in project CSS.
 
@@ -78,7 +81,7 @@ Each color token has `name`, `value`, optional `hex`, and `source.file`. `value`
 
 `actions` is always present. It lists user interaction affordances the compiler can attribute to a discovered screen.
 
-An action is recorded only in a source file that defines exactly one extracted screen. Actions in shared components, files without a screen, or files with more than one extracted screen are omitted.
+An action is recorded only in a source file that defines exactly one extracted screen. Its `route` is that screen's destination. Actions in shared components, files without a screen, or files with more than one extracted screen are omitted. Actions in a parent module that is not itself a screen are omitted and are not copied onto other screens.
 
 `kind` is `invoke` or `submit`. `invoke` means the user can activate a control with a statically recognized handler. `submit` means the user can submit a form with a statically recognized `onSubmit` handler. These names describe product interaction, not DOM event types.
 
@@ -94,4 +97,20 @@ Optional `label` comes from a static `aria-label` or from static JSX text childr
 
 A form with `onSubmit` emits one `submit` action. Descendant `type="button"` controls with recognized `onClick` still emit `invoke`. A native `<button>` without `type` inside a form is treated as a submit control; it does not emit `invoke` without its own recognized `onClick`. A submit control with its own recognized `onClick` may emit `invoke` in addition to the form `submit`.
 
-TanStack `<Link>` navigation is not duplicated as actions. Handler bodies, effects, API calls, `navigate()`, `redirect()`, actual color usage in components, and line or column positions are not in this IR yet.
+TanStack `<Link>` navigation is not duplicated as actions. API calls, `navigate()` / `redirect()` as screen navigation, actual color usage in components, and line or column positions are not in this IR yet.
+
+`effects` is always present on an action this compiler emits. `schemaVersion` stays `"1"`. Effects are nested on the action that caused them. They stay in source order and are not sorted or deduplicated.
+
+An action means the user can trigger that interaction. An effect means a supported direct consequence was extracted from the analyzed handler. `"effects": []` means no supported effect was extracted. It does not mean the action does nothing: the handler may call unsupported or cross-file code.
+
+The analyzed body is the inline arrow function or function expression. When the handler is an identifier, the compiler follows one same-file binding that resolves unambiguously to a function declaration, an arrow initializer, or a function-expression initializer, then analyzes that body. It does not follow calls inside that function, imports, parameters, props, destructured hook methods, or other files.
+
+Only a concise arrow call, or a call statement at the top of that body, is inspected. A call inside `if`, `?:`, `&&`, `||`, a loop, `switch`, `try`, or a nested function is omitted. There is no condition field.
+
+`kind: "state"` is a write through the setter of a React `useState` tuple. `useState` must be a named import from `react`, the callee must be the second binding, and `target` is the first binding. `value` is included only when the single argument is a string, number, boolean, or `null` literal. An updater or other expression omits `value`. The target name is not given a product meaning.
+
+`kind: "search"` is a TanStack search update that stays on the current destination. The callee must be a local binding of `useNavigate()` imported from `@tanstack/react-router`, or of `Route.useNavigate()` where `Route` is the local `createFileRoute("...")` binding in that file. An arbitrary `Something.useNavigate()` does not qualify. The call has one object argument that contains `search`, and `to` is absent or the literal `"."`. Search keys and values are not emitted. A `to` that names another destination, or a dynamic `to`, is not a search effect.
+
+`kind: "submit"` remains an action kind. It is not an effect. `preventDefault()` is not an effect. Only handler calls that independently match `state` or `search` are effects. `navigation` is unchanged: static `<Link>` screen edges, not search effects and not imperative navigation.
+
+Storage, network, mutations, server functions, imported helpers, writes that happen later in `useEffect`, input or select changes, and clicks that are not already actions are not effects.

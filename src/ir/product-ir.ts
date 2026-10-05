@@ -38,11 +38,24 @@ export interface ActionSource {
   file: string;
 }
 
+export interface StateEffect {
+  kind: "state";
+  target: string;
+  value?: string | number | boolean | null;
+}
+
+export interface SearchEffect {
+  kind: "search";
+}
+
+export type Effect = StateEffect | SearchEffect;
+
 export interface Action {
   route: string;
   kind: "invoke" | "submit";
   label?: string;
   source: ActionSource;
+  effects: Effect[];
 }
 
 export interface ProductIr {
