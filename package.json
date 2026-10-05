@@ -1,6 +1,6 @@
 {
   "name": "abbox",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Compiler that produces a framework-independent Product IR from application source code.",
   "author": "Kamran Elchuzade",
   "license": "Apache-2.0",
