@@ -73,10 +73,20 @@ export interface Entity {
   source: EntitySource;
 }
 
+export interface GlobalNavigation {
+  to: string;
+  source: GlobalNavigationSource;
+}
+
+export interface GlobalNavigationSource {
+  file: string;
+}
+
 export interface ProductIr {
   schemaVersion: typeof productIrSchemaVersion;
   screens: Screen[];
   navigation: Navigation[];
+  globalNavigation: GlobalNavigation[];
   designSystem: DesignSystem;
   actions: Action[];
   entities: Entity[];

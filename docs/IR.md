@@ -19,6 +19,14 @@
       "to": "/projects"
     }
   ],
+  "globalNavigation": [
+    {
+      "to": "/saved",
+      "source": {
+        "file": "components/AppShell.tsx"
+      }
+    }
+  ],
   "designSystem": {
     "themes": [
       {
@@ -76,7 +84,21 @@ That literal is a TanStack file-route id. An index id is the destination plus a 
 
 The order of `screens` is not part of the Product IR contract.
 
-`navigation` lists known screen-to-screen relationships. Every `navigation.from` and every `navigation.to` is a discovered `Screen.route`. An entry is recorded only when a TanStack `<Link>` in the same file as exactly one extracted screen uses a static absolute `to` that resolves to another discovered screen destination. A TanStack index route id used as `to` resolves through the same destination rule as screens. Links in shared components, files that do not own exactly one screen, or files with more than one extracted screen are omitted. Duplicate links between the same two routes collapse to one entry. The order of `navigation` is not part of the Product IR contract.
+`navigation` lists screen-to-screen relationships attributable to a particular discovered screen. Every `navigation.from` and every `navigation.to` is a discovered `Screen.route`. Each entry means a statically supported navigation affordance on that screen, not merely that the destination is reachable elsewhere in the product.
+
+Same-file evidence: a TanStack `<Link>` in the same module as exactly one extracted screen, with a static absolute `to` that resolves to another discovered screen destination.
+
+Component evidence: the screen module directly renders an imported exported function component (single-hop import, no barrel re-export), and that component’s function body contains a supported static `<Link>` to another discovered screen.
+
+A TanStack index route id used as `to` resolves through the same destination rule as screens. Duplicate `{ from, to }` pairs collapse to one entry. The order of `navigation` is not part of the Product IR contract.
+
+`globalNavigation` is always present. It lists destinations exposed through persistent application chrome around the routed main content area of the application. Each entry has `to` (a discovered screen destination) and `source.file` (the module that owns the chrome links). It does not include a `from` screen: the compiler does not expand chrome into one navigation edge per screen.
+
+Absence of `globalNavigation` entries in older `schemaVersion: "1"` documents, or an empty array in current output, does not prove the product has no global navigation—only that this compiler pass did not justify any chrome links under its rules.
+
+Consumers may treat `globalNavigation` destinations as reachable from any discovered file-route screen when building graphs or journeys, subject to the documented scope of the chrome evidence. The compiler does not materialize those implied edges into `navigation`.
+
+Duplicate `to` values in `globalNavigation` collapse to one entry, sorted by `to` then `source.file`. The order of `globalNavigation` is not part of the Product IR contract.
 
 `designSystem.themes` is always present. It is empty when no recognized runtime theme exists in project CSS.
 

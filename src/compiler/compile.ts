@@ -5,8 +5,13 @@ import {
   type ActionCandidate,
   collectActionCandidates,
 } from "../frameworks/react/actions.js";
+import { collectComponentAttributedNavigation } from "../frameworks/react/component-navigation.js";
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
-import { collectStaticLinks } from "../frameworks/tanstack/links.js";
+import { collectScopedStaticLinks } from "../frameworks/tanstack/links.js";
+import {
+  buildGlobalNavigationFromCandidate,
+  detectGlobalChromeCandidate,
+} from "../frameworks/tanstack/root-chrome.js";
 import { collectEntityCandidates } from "../frameworks/typescript/entity-models.js";
 import {
   type Action,
@@ -40,12 +45,35 @@ export function compile(projectPath: string): ProductIr {
   const projectRoot = path.resolve(projectPath);
   const files = discoverSourceFiles(projectRoot);
   const routeHits = collectFileRouteScreens(files);
-  const linkHits = collectStaticLinks(files);
+  const linkHits = collectScopedStaticLinks(files);
 
   const screensByFile = groupRoutesByFile(routeHits);
   const knownRoutes = new Set(routeHits.map((hit) => hit.route));
+  const screenRouteFilePaths = new Set(routeHits.map((hit) => hit.filePath));
 
-  const navigation = buildNavigation(screensByFile, linkHits, knownRoutes);
+  const sameFileNavigation = buildSameFileNavigation(
+    screensByFile,
+    linkHits,
+    knownRoutes,
+  );
+  const componentNavigation = collectComponentAttributedNavigation(
+    projectRoot,
+    files,
+    screensByFile,
+    knownRoutes,
+  );
+  const navigation = mergeNavigation(sameFileNavigation, componentNavigation);
+
+  const chromeCandidate = detectGlobalChromeCandidate(
+    projectRoot,
+    files,
+    screenRouteFilePaths,
+  );
+  const globalNavigation = buildGlobalNavigationFromCandidate(
+    projectRoot,
+    chromeCandidate,
+    knownRoutes,
+  );
   const actionCandidates = collectActionCandidates(files);
   const actions = buildActions(projectRoot, screensByFile, actionCandidates);
   const cssFiles = discoverStylesheetFiles(projectRoot);
@@ -62,6 +90,7 @@ export function compile(projectPath: string): ProductIr {
       source: { file: toProjectRelativePath(projectRoot, hit.filePath) },
     })),
     navigation,
+    globalNavigation,
     designSystem,
     actions,
     entities,
@@ -172,7 +201,7 @@ function groupRoutesByFile(
   return byFile;
 }
 
-function buildNavigation(
+function buildSameFileNavigation(
   screensByFile: Map<string, string[]>,
   linkHits: readonly { filePath: string; to: string }[],
   knownRoutes: ReadonlySet<string>,
@@ -200,6 +229,25 @@ function buildNavigation(
     }
   }
 
+  return [...edges.values()].sort((left, right) => {
+    const byFrom = left.from.localeCompare(right.from);
+    if (byFrom !== 0) {
+      return byFrom;
+    }
+    return left.to.localeCompare(right.to);
+  });
+}
+
+function mergeNavigation(...groups: readonly Navigation[][]): Navigation[] {
+  const edges = new Map<string, Navigation>();
+  for (const group of groups) {
+    for (const edge of group) {
+      const key = `${edge.from}\0${edge.to}`;
+      if (!edges.has(key)) {
+        edges.set(key, edge);
+      }
+    }
+  }
   return [...edges.values()].sort((left, right) => {
     const byFrom = left.from.localeCompare(right.from);
     if (byFrom !== 0) {

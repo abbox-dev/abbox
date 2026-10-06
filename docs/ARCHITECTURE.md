@@ -1,6 +1,6 @@
 # Architecture
 
-Abbox compiles application source into a framework-independent Product IR. `compile(projectPath)` returns screens, navigation, declared design-system colors, actions (with nested effects), and entities, including `schemaVersion`. `abbox compile` writes that same value to `abbox.json`.
+Abbox compiles application source into a framework-independent Product IR. `compile(projectPath)` returns screens, navigation, global navigation, declared design-system colors, actions (with nested effects), and entities, including `schemaVersion`. `abbox compile` writes that same value to `abbox.json`.
 
 ## Package
 
@@ -31,6 +31,8 @@ src/
       theme-colors.ts
     react/
       actions.ts
+      component-navigation.ts
+      direct-component-imports.ts
       handler-effects.ts
       jsx-handler.ts
       jsx-label.ts
@@ -39,12 +41,15 @@ src/
     tanstack/
       file-routes.ts
       links.ts
+      root-chrome.ts
       named-import.ts
       search-effect.ts
     typescript/
       entity-models.ts
+      module-resolve.ts
+      barrel-module.ts
 tests/fixtures/tanstack-file-routes/
-tests/fixtures/tanstack-links/
+tests/fixtures/tanstack-navigation-v2/
 tests/fixtures/tanstack-actions/
 tests/fixtures/tanstack-effects/
 tests/fixtures/tanstack-destinations/
@@ -52,7 +57,9 @@ tests/fixtures/entity-models/
 tests/fixtures/design-system-colors/
 ```
 
-`src/compiler/compile.ts` discovers `.ts`, `.tsx`, and `.css` files (same skip directories for each), extracts TanStack screens and navigation, static JSX actions and nested handler effects, declared CSS theme colors, and entities from TypeScript model evidence.
+`src/compiler/compile.ts` discovers `.ts`, `.tsx`, and `.css` files (same skip directories for each), extracts TanStack screens, screen-attributed navigation, global navigation from root layout chrome, static JSX actions and nested handler effects, declared CSS theme colors, and entities from TypeScript model evidence.
+
+TanStack-specific navigation rules live under `src/frameworks/tanstack/` (`links.ts`, `root-chrome.ts`) and `src/frameworks/react/component-navigation.ts` for direct component attribution. Product IR field names (`navigation`, `globalNavigation`) stay framework-independent in `src/ir/product-ir.ts`.
 
 `src/frameworks/typescript/entity-models.ts` emits entities when a file exports an object type or interface and an exported `N[]` / `Array<N>` collection for the same name.
 

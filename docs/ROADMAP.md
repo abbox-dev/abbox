@@ -32,6 +32,10 @@ Action effects from supported handler bodies: React `useState` writes and TanSta
 
 Entities from exported object types paired with exported typed collections in the same module, with field names and ambiguity omission.
 
+## Step 9
+
+Navigation V2: screen-attributed navigation from same-file links and direct imported components; `globalNavigation` for persistent root chrome (not expanded into per-screen `navigation` edges).
+
 ## Next
 
 - Actual design usage (Tailwind classes, inline styles, component CSS)
