@@ -18,6 +18,7 @@ function screens(...entries: { route: string; file: string }[]) {
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
 const emptyActions = { actions: [] as const };
 const emptyEntities = { entities: [] as const };
+const emptyGlobalNavigation = { globalNavigation: [] as const };
 
 describe("compile navigation", () => {
   it("links from / to a discovered /projects screen", () => {
@@ -31,6 +32,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -45,6 +47,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -59,6 +62,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -78,6 +82,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -95,6 +100,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -109,6 +115,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -138,6 +145,7 @@ describe("compile navigation", () => {
         },
       ],
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -149,6 +157,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -163,6 +172,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -177,6 +187,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -191,6 +202,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -205,20 +217,22 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
-  it("does not attribute links in shared components", () => {
+  it("attributes links from a directly imported shared component", () => {
     expect(compile(fixture("shared"))).toEqual({
       schemaVersion: "1",
       screens: screens(
         { route: "/", file: "routes/index.tsx" },
         { route: "/projects", file: "routes/projects.tsx" },
       ),
-      navigation: [],
+      navigation: [{ from: "/", to: "/projects" }],
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 
@@ -233,6 +247,7 @@ describe("compile navigation", () => {
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
     });
   });
 });

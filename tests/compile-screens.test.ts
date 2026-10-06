@@ -11,6 +11,7 @@ function fixture(name: string): string {
 const emptyNavigation = { navigation: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
 const emptyEntities = { entities: [] as const };
+const emptyGlobalNavigation = { globalNavigation: [] as const };
 const emptyActions = { actions: [] as const };
 
 describe("compile screens", () => {
@@ -19,8 +20,10 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });
@@ -32,8 +35,10 @@ describe("compile screens", () => {
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });
@@ -48,8 +53,10 @@ describe("compile screens", () => {
         },
       ],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });
@@ -63,8 +70,10 @@ describe("compile screens", () => {
         { route: "/", source: { file: "routes/index.tsx" } },
       ],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });
@@ -74,8 +83,10 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });
@@ -85,8 +96,10 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });
@@ -98,8 +111,10 @@ describe("compile screens", () => {
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });
@@ -109,8 +124,10 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [{ route: "/login", source: { file: "routes/login.tsx" } }],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });
@@ -120,8 +137,10 @@ describe("compile screens", () => {
       schemaVersion: "1",
       screens: [{ route: "/visible", source: { file: "src/app.tsx" } }],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
+      ...emptyGlobalNavigation,
       ...emptyActions,
     });
   });

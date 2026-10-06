@@ -9,6 +9,7 @@ function fixture(name: string): string {
 }
 
 const emptyNavigation = { navigation: [] as const };
+const emptyGlobalNavigation = { globalNavigation: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
 const emptyActions = { actions: [] as const };
 
@@ -127,6 +128,7 @@ describe("compile entities", () => {
       schemaVersion: "1",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       ...emptyNavigation,
+      ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyActions,
       entities: [],

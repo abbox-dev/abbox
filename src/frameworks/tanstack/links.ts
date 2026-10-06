@@ -9,7 +9,23 @@ export interface StaticLinkHit {
   to: string;
 }
 
+export interface ScopedStaticLinkHit {
+  filePath: string;
+  /** Undefined when the link is not inside an exported function component body */
+  componentExportName?: string;
+  to: string;
+}
+
 export function collectStaticLinks(files: readonly string[]): StaticLinkHit[] {
+  return collectScopedStaticLinks(files).map(({ filePath, to }) => ({
+    filePath,
+    to,
+  }));
+}
+
+export function collectScopedStaticLinks(
+  files: readonly string[],
+): ScopedStaticLinkHit[] {
   if (files.length === 0) {
     return [];
   }
@@ -17,45 +33,77 @@ export function collectStaticLinks(files: readonly string[]): StaticLinkHit[] {
   const project = new Project({
     skipAddingFilesFromTsConfig: true,
   });
-  const hits: StaticLinkHit[] = [];
+  const hits: ScopedStaticLinkHit[] = [];
   for (const file of files) {
-    hits.push(...linksInFile(project.addSourceFileAtPath(file)));
+    hits.push(...scopedLinksInFile(project.addSourceFileAtPath(file)));
   }
   return hits;
 }
 
-function linksInFile(sourceFile: SourceFile): StaticLinkHit[] {
+function scopedLinksInFile(sourceFile: SourceFile): ScopedStaticLinkHit[] {
   const names = importedLocalNames(sourceFile, linkExportName);
   if (names.size === 0) {
     return [];
   }
 
-  const hits: StaticLinkHit[] = [];
-  for (const element of sourceFile.getDescendantsOfKind(
-    SyntaxKind.JsxSelfClosingElement,
-  )) {
-    const hit = linkDestinationFromElement(
-      element.getTagNameNode(),
-      names,
-      element,
-    );
-    if (hit !== undefined) {
-      hits.push({ filePath: sourceFile.getFilePath(), to: hit });
+  const filePath = sourceFile.getFilePath();
+  const hits: ScopedStaticLinkHit[] = [];
+  const linkElements = [
+    ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement),
+    ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement),
+  ];
+
+  for (const element of linkElements) {
+    const tagName = element.getTagNameNode();
+    const to = linkDestinationFromElement(tagName, names, element);
+    if (to === undefined) {
+      continue;
     }
-  }
-  for (const element of sourceFile.getDescendantsOfKind(
-    SyntaxKind.JsxOpeningElement,
-  )) {
-    const hit = linkDestinationFromElement(
-      element.getTagNameNode(),
-      names,
+    const componentExportName = enclosingExportedComponentName(
       element,
+      sourceFile,
     );
-    if (hit !== undefined) {
-      hits.push({ filePath: sourceFile.getFilePath(), to: hit });
+    const hit: ScopedStaticLinkHit = { filePath, to };
+    if (componentExportName !== undefined) {
+      hit.componentExportName = componentExportName;
     }
+    hits.push(hit);
   }
   return hits;
+}
+
+function enclosingExportedComponentName(
+  linkNode: Node,
+  sourceFile: SourceFile,
+): string | undefined {
+  let current: Node | undefined = linkNode;
+  while (current !== undefined && current !== sourceFile) {
+    if (Node.isFunctionDeclaration(current)) {
+      if (!current.isExported()) {
+        return undefined;
+      }
+      return current.getName();
+    }
+    if (Node.isVariableDeclaration(current)) {
+      const parent = current.getParent();
+      if (
+        parent !== undefined &&
+        Node.isVariableStatement(parent) &&
+        parent.isExported()
+      ) {
+        const initializer = current.getInitializer();
+        if (
+          initializer !== undefined &&
+          (Node.isArrowFunction(initializer) ||
+            Node.isFunctionExpression(initializer))
+        ) {
+          return current.getName();
+        }
+      }
+    }
+    current = current.getParent();
+  }
+  return undefined;
 }
 
 function linkDestinationFromElement(
@@ -103,9 +151,101 @@ function linkDestinationFromElement(
   return undefined;
 }
 
-function absoluteRouteLiteral(text: string): string | undefined {
+export function absoluteRouteLiteral(text: string): string | undefined {
   if (text.length === 0 || !text.startsWith("/") || text.startsWith("//")) {
     return undefined;
   }
   return fileRouteDestination(text);
+}
+
+export function staticLinksInComponentBody(
+  sourceFile: SourceFile,
+  exportName: string,
+): string[] {
+  const componentBody = exportedComponentBody(sourceFile, exportName);
+  if (componentBody === undefined) {
+    return [];
+  }
+  const names = importedLocalNames(sourceFile, linkExportName);
+  if (names.size === 0) {
+    return [];
+  }
+
+  const destinations: string[] = [];
+  for (const element of componentBody.getDescendantsOfKind(
+    SyntaxKind.JsxSelfClosingElement,
+  )) {
+    const to = linkDestinationFromElement(
+      element.getTagNameNode(),
+      names,
+      element,
+    );
+    if (to !== undefined) {
+      destinations.push(to);
+    }
+  }
+  for (const element of componentBody.getDescendantsOfKind(
+    SyntaxKind.JsxOpeningElement,
+  )) {
+    const to = linkDestinationFromElement(
+      element.getTagNameNode(),
+      names,
+      element,
+    );
+    if (to !== undefined) {
+      destinations.push(to);
+    }
+  }
+  return destinations;
+}
+
+function exportedComponentBody(
+  sourceFile: SourceFile,
+  exportName: string,
+): Node | undefined {
+  if (exportName === "default") {
+    for (const statement of sourceFile.getStatements()) {
+      if (
+        Node.isFunctionDeclaration(statement) &&
+        statement.isDefaultExport()
+      ) {
+        return statement;
+      }
+      if (Node.isExportAssignment(statement) && !statement.isExportEquals()) {
+        const expression = statement.getExpression();
+        if (
+          Node.isArrowFunction(expression) ||
+          Node.isFunctionExpression(expression)
+        ) {
+          return expression;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  for (const declaration of sourceFile.getFunctions()) {
+    if (declaration.isExported() && declaration.getName() === exportName) {
+      return declaration;
+    }
+  }
+  for (const statement of sourceFile.getVariableStatements()) {
+    if (!statement.isExported()) {
+      continue;
+    }
+    for (const declaration of statement.getDeclarations()) {
+      if (declaration.getName() !== exportName) {
+        continue;
+      }
+      const initializer = declaration.getInitializer();
+      if (
+        initializer !== undefined &&
+        (Node.isArrowFunction(initializer) ||
+          Node.isFunctionExpression(initializer))
+      ) {
+        return initializer;
+      }
+    }
+  }
+  return undefined;
 }
