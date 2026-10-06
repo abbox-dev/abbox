@@ -63,7 +63,7 @@ TanStack-specific navigation rules live under `src/frameworks/tanstack/` (`links
 
 `src/frameworks/typescript/entity-models.ts` emits entities when a file exports an object type or interface and an exported `N[]` / `Array<N>` collection for the same name.
 
-`src/frameworks/react/actions.ts` walks JSX with ts-morph, emits invoke and submit candidates, and attaches extracted effects. `buildActions` in `compile.ts` attaches the screen destination per file and sorts the result.
+`src/frameworks/react/actions.ts` walks JSX with ts-morph, emits invoke and submit candidates, and attaches extracted effects. `component-actions.ts` attributes supported actions from directly rendered imported component export bodies (same boundary as Navigation V2). `buildActions` in `compile.ts` attaches the screen destination per route module and sorts the result.
 
 `src/frameworks/css/theme-colors.ts` parses CSS with PostCSS, reads `@theme` semantic `--color-*` declarations and `:root` / `.dark` physical custom properties, resolves one-level `var(--x)` aliases per theme, and emits `designSystem.themes` with optional canonical `hex`.
 

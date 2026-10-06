@@ -115,7 +115,11 @@ Each color token has `name`, `value`, optional `hex`, and `source.file`. `value`
 
 `actions` is always present. It lists user interaction affordances the compiler can attribute to a discovered screen.
 
-An action is recorded only in a source file that defines exactly one extracted screen. Its `route` is that screen's destination. Actions in shared components, files without a screen, or files with more than one extracted screen are omitted. Actions in a parent module that is not itself a screen are omitted and are not copied onto other screens.
+An action is recorded when the compiler can attribute it to exactly one extracted screen. Same-file attribution applies when the action candidate appears in a route module that defines exactly one screen; its `route` is that screen's destination and `source.file` is that route module.
+
+Component attribution applies when a route module defines exactly one screen, directly renders an imported component (same conservative import and JSX rules as screen-attributed `navigation`), and the action candidate appears in that component's exported function body. Those actions use the same `route` and `source.file` as the route module (screen ownership), not the component module path.
+
+Actions in shared components that are not directly rendered by a qualifying route module, files without a screen, route modules with more than one extracted screen, barrel re-exports, unresolved imports, nested imported child components, and other unsupported cases are omitted. Actions in root layout chrome are not copied onto every screen. There is no `globalActions` list.
 
 `kind` is `invoke` or `submit`. `invoke` means the user can activate a control with a statically recognized handler. `submit` means the user can submit a form with a statically recognized `onSubmit` handler. These names describe product interaction, not DOM event types.
 

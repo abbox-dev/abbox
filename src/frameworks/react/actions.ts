@@ -6,6 +6,7 @@ import {
   SyntaxKind,
 } from "ts-morph";
 import type { Effect } from "../../ir/product-ir.js";
+import { exportedComponentBody } from "../tanstack/links.js";
 import { effectsFromHandler } from "./handler-effects.js";
 import { recognizedHandlerExpression } from "./jsx-handler.js";
 import { extractStaticLabel } from "./jsx-label.js";
@@ -21,6 +22,7 @@ export interface ActionCandidate {
 
 export function collectActionCandidates(
   files: readonly string[],
+  nextIndex: () => number = createDiscoveryIndex(),
 ): ActionCandidate[] {
   if (files.length === 0) {
     return [];
@@ -30,37 +32,55 @@ export function collectActionCandidates(
     skipAddingFilesFromTsConfig: true,
   });
   const candidates: ActionCandidate[] = [];
-  let discoveryIndex = 0;
   for (const file of files) {
     const sourceFile = project.addSourceFileAtPath(file);
-    candidates.push(
-      ...candidatesInFile(sourceFile, () => {
-        const index = discoveryIndex;
-        discoveryIndex += 1;
-        return index;
-      }),
-    );
+    candidates.push(...candidatesInFile(sourceFile, file, nextIndex));
   }
   return candidates;
 }
 
+export function candidatesInExportBody(
+  sourceFile: SourceFile,
+  exportName: string,
+  attributionFilePath: string,
+  nextIndex: () => number,
+): ActionCandidate[] {
+  const body = exportedComponentBody(sourceFile, exportName);
+  if (body === undefined) {
+    return [];
+  }
+  return candidatesInScope(sourceFile, body, attributionFilePath, nextIndex);
+}
+
 function candidatesInFile(
   sourceFile: SourceFile,
+  attributionFilePath: string,
+  nextIndex: () => number,
+): ActionCandidate[] {
+  return candidatesInScope(
+    sourceFile,
+    sourceFile,
+    attributionFilePath,
+    nextIndex,
+  );
+}
+
+function candidatesInScope(
+  sourceFile: SourceFile,
+  scope: Node,
+  attributionFilePath: string,
   nextIndex: () => number,
 ): ActionCandidate[] {
   const uiButtonNames = importedUiButtonLocalNames(sourceFile);
-  const filePath = sourceFile.getFilePath();
   const candidates: ActionCandidate[] = [];
 
-  for (const element of sourceFile.getDescendantsOfKind(
-    SyntaxKind.JsxElement,
-  )) {
+  for (const element of jsxElementsInScope(scope)) {
     const opening = element.getOpeningElement();
     if (isFormOpening(opening)) {
       const candidate = submitFromElement(
         sourceFile,
         opening.getAttributes(),
-        filePath,
+        attributionFilePath,
         nextIndex,
       );
       if (candidate !== undefined) {
@@ -69,14 +89,12 @@ function candidatesInFile(
     }
   }
 
-  for (const element of sourceFile.getDescendantsOfKind(
-    SyntaxKind.JsxSelfClosingElement,
-  )) {
+  for (const element of jsxSelfClosingInScope(scope)) {
     if (isFormSelfClosing(element)) {
       const candidate = submitFromElement(
         sourceFile,
         element.getAttributes(),
-        filePath,
+        attributionFilePath,
         nextIndex,
       );
       if (candidate !== undefined) {
@@ -85,16 +103,14 @@ function candidatesInFile(
     }
   }
 
-  for (const element of sourceFile.getDescendantsOfKind(
-    SyntaxKind.JsxSelfClosingElement,
-  )) {
+  for (const element of jsxSelfClosingInScope(scope)) {
     const candidate = invokeFromInteractiveElement(
       sourceFile,
       element,
       element.getTagNameNode(),
       element.getAttributes(),
       uiButtonNames,
-      filePath,
+      attributionFilePath,
       nextIndex,
     );
     if (candidate !== undefined) {
@@ -102,9 +118,7 @@ function candidatesInFile(
     }
   }
 
-  for (const element of sourceFile.getDescendantsOfKind(
-    SyntaxKind.JsxElement,
-  )) {
+  for (const element of jsxElementsInScope(scope)) {
     const opening = element.getOpeningElement();
     const candidate = invokeFromInteractiveElement(
       sourceFile,
@@ -112,7 +126,7 @@ function candidatesInFile(
       opening.getTagNameNode(),
       opening.getAttributes(),
       uiButtonNames,
-      filePath,
+      attributionFilePath,
       nextIndex,
     );
     if (candidate !== undefined) {
@@ -121,6 +135,31 @@ function candidatesInFile(
   }
 
   return candidates;
+}
+
+function jsxElementsInScope(scope: Node): import("ts-morph").JsxElement[] {
+  if (Node.isSourceFile(scope)) {
+    return scope.getDescendantsOfKind(SyntaxKind.JsxElement);
+  }
+  return scope.getDescendantsOfKind(SyntaxKind.JsxElement);
+}
+
+function jsxSelfClosingInScope(
+  scope: Node,
+): import("ts-morph").JsxSelfClosingElement[] {
+  if (Node.isSourceFile(scope)) {
+    return scope.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement);
+  }
+  return scope.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement);
+}
+
+function createDiscoveryIndex(): () => number {
+  let discoveryIndex = 0;
+  return () => {
+    const index = discoveryIndex;
+    discoveryIndex += 1;
+    return index;
+  };
 }
 
 function submitFromElement(

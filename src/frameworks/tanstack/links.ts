@@ -199,7 +199,7 @@ export function staticLinksInComponentBody(
   return destinations;
 }
 
-function exportedComponentBody(
+export function exportedComponentBody(
   sourceFile: SourceFile,
   exportName: string,
 ): Node | undefined {
