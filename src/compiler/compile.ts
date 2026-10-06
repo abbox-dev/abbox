@@ -5,6 +5,7 @@ import {
   type ActionCandidate,
   collectActionCandidates,
 } from "../frameworks/react/actions.js";
+import { collectComponentAttributedActionCandidates } from "../frameworks/react/component-actions.js";
 import { collectComponentAttributedNavigation } from "../frameworks/react/component-navigation.js";
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
 import { collectScopedStaticLinks } from "../frameworks/tanstack/links.js";
@@ -74,7 +75,26 @@ export function compile(projectPath: string): ProductIr {
     chromeCandidate,
     knownRoutes,
   );
-  const actionCandidates = collectActionCandidates(files);
+  let actionDiscoveryIndex = 0;
+  const nextActionDiscoveryIndex = (): number => {
+    const index = actionDiscoveryIndex;
+    actionDiscoveryIndex += 1;
+    return index;
+  };
+  const sameFileActionCandidates = collectActionCandidates(
+    files,
+    nextActionDiscoveryIndex,
+  );
+  const componentActionCandidates = collectComponentAttributedActionCandidates(
+    projectRoot,
+    files,
+    screensByFile,
+    nextActionDiscoveryIndex,
+  );
+  const actionCandidates: ActionCandidate[] = [
+    ...sameFileActionCandidates,
+    ...componentActionCandidates,
+  ];
   const actions = buildActions(projectRoot, screensByFile, actionCandidates);
   const cssFiles = discoverStylesheetFiles(projectRoot);
   const designSystem =

@@ -36,6 +36,10 @@ Entities from exported object types paired with exported typed collections in th
 
 Navigation V2: screen-attributed navigation from same-file links and direct imported components; `globalNavigation` for persistent root chrome (not expanded into per-screen `navigation` edges).
 
+## Step 10
+
+Actions Attribution V2: screen-attributed actions from same-file JSX and direct imported component export bodies (same conservative boundary as Navigation V2 component links). Root chrome actions are not attributed to every screen.
+
 ## Next
 
 - Actual design usage (Tailwind classes, inline styles, component CSS)

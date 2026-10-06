@@ -250,7 +250,7 @@ describe("compile actions", () => {
     });
   });
 
-  it("does not attribute actions in shared components", () => {
+  it("attributes actions in directly rendered shared components", () => {
     expect(compile(fixture("shared-component"))).toEqual({
       schemaVersion: "1",
       screens: screens({ route: "/", file: "routes/index.tsx" }),
@@ -258,8 +258,7 @@ describe("compile actions", () => {
       ...emptyGlobalNavigation,
       ...emptyDesignSystem,
       ...emptyEntities,
-      ...emptyGlobalNavigation,
-      actions: [],
+      actions: [invoke("/", "routes/index.tsx", "Delete")],
     });
   });
 
@@ -400,6 +399,127 @@ describe("compile actions", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       actions: [invoke("/", "routes/index.tsx", "Save")],
+    });
+  });
+});
+
+describe("compile actions attribution v2", () => {
+  it("attributes invoke actions from a named imported component", () => {
+    const result = compile(fixture("component-named"));
+    expect(result.schemaVersion).toBe("1");
+    expect(result.actions).toEqual([
+      invoke("/items", "routes/index.tsx", "Save item"),
+    ]);
+  });
+
+  it("attributes invoke actions from a default imported component", () => {
+    expect(compile(fixture("component-default")).actions).toEqual([
+      invoke("/", "routes/index.tsx", "Default card"),
+    ]);
+  });
+
+  it("attributes actions when the import is aliased", () => {
+    expect(compile(fixture("component-alias")).actions).toEqual([
+      invoke("/", "routes/index.tsx", "Aliased"),
+    ]);
+  });
+
+  it("attributes submit actions inside an imported component", () => {
+    expect(compile(fixture("component-submit")).actions).toEqual([
+      submit("/", "routes/index.tsx"),
+    ]);
+  });
+
+  it("preserves supported effects on attributed actions", () => {
+    expect(compile(fixture("component-state-effect")).actions).toEqual([
+      {
+        route: "/",
+        kind: "invoke",
+        label: "Bump",
+        source: { file: "routes/index.tsx" },
+        effects: [{ kind: "state", target: "count", value: 1 }],
+      },
+    ]);
+  });
+
+  it("analyzes only the exported component referenced by the route", () => {
+    expect(compile(fixture("component-multi-export")).actions).toEqual([
+      invoke("/", "routes/index.tsx", "A only"),
+    ]);
+  });
+
+  it("attributes the same component action to each screen that renders it", () => {
+    expect(compile(fixture("component-two-screens")).actions).toEqual([
+      invoke("/alpha", "routes/index.tsx", "Shared"),
+      invoke("/beta", "routes/beta.tsx", "Shared"),
+    ]);
+  });
+
+  it("omits actions when the component import cannot be resolved", () => {
+    expect(compile(fixture("component-unresolved")).actions).toEqual([]);
+  });
+
+  it("omits actions when the import resolves through a barrel module", () => {
+    expect(compile(fixture("component-barrel")).actions).toEqual([]);
+  });
+
+  it("omits type-only imports for component attribution", () => {
+    expect(compile(fixture("component-type-only")).actions).toEqual([
+      invoke("/", "routes/index.tsx", "Real"),
+    ]);
+  });
+
+  it("omits component attribution when the route module has multiple screens", () => {
+    expect(compile(fixture("component-ambiguous")).actions).toEqual([]);
+  });
+
+  it("does not attribute actions from nested imported child components", () => {
+    expect(compile(fixture("component-no-recursive")).actions).toEqual([]);
+  });
+
+  it("omits actions defined in a sibling local component outside the export body", () => {
+    expect(compile(fixture("component-nested-local")).actions).toEqual([]);
+  });
+
+  it("omits unsupported conditional handlers inside attributed components", () => {
+    expect(compile(fixture("component-conditional-handler")).actions).toEqual(
+      [],
+    );
+  });
+
+  it("supports conditional JSX when the component tag is static", () => {
+    expect(compile(fixture("component-conditional-jsx")).actions).toEqual([
+      invoke("/", "routes/index.tsx", "Conditional"),
+    ]);
+  });
+
+  it("dedupes duplicate attributed discovery for the same route module", () => {
+    expect(compile(fixture("component-dedupe-alias")).actions).toEqual([
+      invoke("/", "routes/index.tsx", "Once"),
+    ]);
+  });
+
+  it("leaves same-file action extraction unchanged", () => {
+    expect(compile(fixture("button-static-label")).actions).toEqual([
+      invoke("/", "routes/index.tsx", "Save"),
+    ]);
+  });
+
+  it("does not change navigation when adding component action attribution", () => {
+    expect(compile(fixture("component-nav-unchanged"))).toMatchObject({
+      schemaVersion: "1",
+      navigation: [{ from: "/", to: "/target" }],
+      actions: [invoke("/", "routes/index.tsx", "Stay")],
+    });
+  });
+
+  it("does not attribute actions from global application chrome to screens", () => {
+    expect(compile(fixture("global-chrome-button"))).toMatchObject({
+      schemaVersion: "1",
+      actions: [],
+      globalNavigation: [
+        { to: "/", source: { file: "components/Chrome.tsx" } },
+      ],
     });
   });
 });
