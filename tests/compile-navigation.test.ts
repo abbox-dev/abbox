@@ -17,6 +17,7 @@ function screens(...entries: { route: string; file: string }[]) {
 
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
 const emptyActions = { actions: [] as const };
+const emptyEntities = { entities: [] as const };
 
 describe("compile navigation", () => {
   it("links from / to a discovered /projects screen", () => {
@@ -29,6 +30,7 @@ describe("compile navigation", () => {
       navigation: [{ from: "/", to: "/projects" }],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -42,6 +44,7 @@ describe("compile navigation", () => {
       navigation: [{ from: "/", to: "/projects" }],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -55,6 +58,7 @@ describe("compile navigation", () => {
       navigation: [{ from: "/", to: "/settings" }],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -73,6 +77,7 @@ describe("compile navigation", () => {
       ],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -89,6 +94,7 @@ describe("compile navigation", () => {
       navigation: [{ from: "/", to: "/projects/$projectId" }],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -102,6 +108,7 @@ describe("compile navigation", () => {
       navigation: [{ from: "/", to: "/projects" }],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -130,6 +137,7 @@ describe("compile navigation", () => {
           effects: [],
         },
       ],
+      ...emptyEntities,
     });
   });
 
@@ -140,6 +148,7 @@ describe("compile navigation", () => {
       navigation: [],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -153,6 +162,7 @@ describe("compile navigation", () => {
       navigation: [],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -166,6 +176,7 @@ describe("compile navigation", () => {
       navigation: [],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -179,6 +190,7 @@ describe("compile navigation", () => {
       navigation: [],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -192,6 +204,7 @@ describe("compile navigation", () => {
       navigation: [],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -205,6 +218,7 @@ describe("compile navigation", () => {
       navigation: [],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 
@@ -218,6 +232,7 @@ describe("compile navigation", () => {
       navigation: [],
       ...emptyDesignSystem,
       ...emptyActions,
+      ...emptyEntities,
     });
   });
 });

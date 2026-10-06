@@ -10,6 +10,7 @@ function fixture(name: string): string {
 
 const emptyNavigation = { navigation: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
+const emptyEntities = { entities: [] as const };
 const emptyActions = { actions: [] as const };
 
 describe("compile screens", () => {
@@ -19,6 +20,7 @@ describe("compile screens", () => {
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -31,6 +33,7 @@ describe("compile screens", () => {
       ],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -46,6 +49,7 @@ describe("compile screens", () => {
       ],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -60,6 +64,7 @@ describe("compile screens", () => {
       ],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -70,6 +75,7 @@ describe("compile screens", () => {
       screens: [],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -80,6 +86,7 @@ describe("compile screens", () => {
       screens: [],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -92,6 +99,7 @@ describe("compile screens", () => {
       ],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -102,6 +110,7 @@ describe("compile screens", () => {
       screens: [{ route: "/login", source: { file: "routes/login.tsx" } }],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -112,6 +121,7 @@ describe("compile screens", () => {
       screens: [{ route: "/visible", source: { file: "src/app.tsx" } }],
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });

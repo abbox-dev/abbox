@@ -7,8 +7,10 @@ import {
 } from "../frameworks/react/actions.js";
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
 import { collectStaticLinks } from "../frameworks/tanstack/links.js";
+import { collectEntityCandidates } from "../frameworks/typescript/entity-models.js";
 import {
   type Action,
+  type Entity,
   emptyDesignSystem,
   type Navigation,
   type ProductIr,
@@ -51,6 +53,7 @@ export function compile(projectPath: string): ProductIr {
     cssFiles.length === 0
       ? emptyDesignSystem
       : extractDesignSystem(projectRoot, cssFiles);
+  const entities = buildEntities(projectRoot, collectEntityCandidates(files));
 
   return {
     schemaVersion: productIrSchemaVersion,
@@ -61,7 +64,37 @@ export function compile(projectPath: string): ProductIr {
     navigation,
     designSystem,
     actions,
+    entities,
   };
+}
+
+function buildEntities(
+  projectRoot: string,
+  candidates: ReturnType<typeof collectEntityCandidates>,
+): Entity[] {
+  const entities: Entity[] = candidates.map((candidate) => ({
+    name: candidate.name,
+    fields: candidate.fields.map((field) => {
+      const mapped: Entity["fields"][number] = { name: field.name };
+      if (field.optional === true) {
+        mapped.optional = true;
+      }
+      return mapped;
+    }),
+    source: {
+      file: toProjectRelativePath(projectRoot, candidate.filePath),
+    },
+  }));
+
+  entities.sort((left, right) => {
+    const byName = left.name.localeCompare(right.name);
+    if (byName !== 0) {
+      return byName;
+    }
+    return left.source.file.localeCompare(right.source.file);
+  });
+
+  return entities;
 }
 
 function buildActions(

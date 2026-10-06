@@ -58,12 +58,28 @@ export interface Action {
   effects: Effect[];
 }
 
+export interface EntitySource {
+  file: string;
+}
+
+export interface EntityField {
+  name: string;
+  optional?: boolean;
+}
+
+export interface Entity {
+  name: string;
+  fields: EntityField[];
+  source: EntitySource;
+}
+
 export interface ProductIr {
   schemaVersion: typeof productIrSchemaVersion;
   screens: Screen[];
   navigation: Navigation[];
   designSystem: DesignSystem;
   actions: Action[];
+  entities: Entity[];
 }
 
 export const emptyDesignSystem: DesignSystem = { themes: [] };

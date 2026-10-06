@@ -17,6 +17,7 @@ function screens(...entries: { route: string; file: string }[]) {
 
 const emptyNavigation = { navigation: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
+const emptyEntities = { entities: [] as const };
 const emptyActions = { actions: [] as const };
 
 describe("tanstack destination lowering", () => {
@@ -29,6 +30,7 @@ describe("tanstack destination lowering", () => {
       }),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -42,6 +44,7 @@ describe("tanstack destination lowering", () => {
       }),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -55,6 +58,7 @@ describe("tanstack destination lowering", () => {
       }),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -71,6 +75,7 @@ describe("tanstack destination lowering", () => {
       ),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -87,6 +92,7 @@ describe("tanstack destination lowering", () => {
       ),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -100,6 +106,7 @@ describe("tanstack destination lowering", () => {
       }),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       actions: [
         {
           route: "/programs",
@@ -121,6 +128,7 @@ describe("tanstack destination lowering", () => {
       }),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       actions: [
         {
           route: "/programs",
@@ -145,6 +153,7 @@ describe("tanstack destination lowering", () => {
       ),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       actions: [
         {
           route: "/programs",
@@ -169,6 +178,7 @@ describe("tanstack destination lowering", () => {
       ),
       navigation: [{ from: "/programs/$programId", to: "/programs" }],
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -185,6 +195,7 @@ describe("tanstack destination lowering", () => {
       ),
       navigation: [{ from: "/programs/$programId", to: "/programs" }],
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -198,6 +209,7 @@ describe("tanstack destination lowering", () => {
       ),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -208,6 +220,7 @@ describe("tanstack destination lowering", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -218,6 +231,7 @@ describe("tanstack destination lowering", () => {
       screens: screens({ route: "/other", file: "routes/other.tsx" }),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
@@ -228,6 +242,7 @@ describe("tanstack destination lowering", () => {
       screens: screens({ route: "/_auth", file: "routes/auth.tsx" }),
       ...emptyNavigation,
       ...emptyDesignSystem,
+      ...emptyEntities,
       ...emptyActions,
     });
   });
