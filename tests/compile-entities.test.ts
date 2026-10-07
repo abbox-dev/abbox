@@ -12,7 +12,7 @@ const emptyNavigation = { navigation: [] as const };
 const emptyGlobalNavigation = { globalNavigation: [] as const };
 const emptyLinks = { links: [] as const, globalLinks: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
-const emptyActions = { actions: [] as const };
+const emptyInteractions = { interactions: [] as const };
 
 function entity(
   name: string,
@@ -126,13 +126,14 @@ describe("compile entities", () => {
         ),
       ),
     ).toEqual({
-      schemaVersion: "1",
+      schemaVersion: "2",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
       ...emptyLinks,
       ...emptyDesignSystem,
-      ...emptyActions,
+      ...emptyInteractions,
+      content: [],
       entities: [],
     });
   });

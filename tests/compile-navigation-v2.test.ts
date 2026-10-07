@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/index.js";
+import { stripInteractionIdsFromProduct } from "./helpers/interaction-expect.js";
 
 function fixture(name: string): string {
   return fileURLToPath(
@@ -9,7 +10,7 @@ function fixture(name: string): string {
 }
 
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
-const emptyActions = { actions: [] as const };
+const emptyInteractions = { interactions: [] as const };
 const emptyEntities = { entities: [] as const };
 const emptyGlobalNavigation = { globalNavigation: [] as const };
 const emptyLinks = { links: [] as const, globalLinks: [] as const };
@@ -23,8 +24,10 @@ function screens(...entries: { route: string; file: string }[]) {
 
 describe("navigation v2 component attribution", () => {
   it("attributes a direct named imported component link", () => {
-    expect(compile(fixture("component-named"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("component-named"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: screens(
         { route: "/", file: "routes/index.tsx" },
         { route: "/items/$itemId", file: "routes/items/$itemId.tsx" },
@@ -33,33 +36,41 @@ describe("navigation v2 component attribution", () => {
       ...emptyGlobalNavigation,
       ...emptyLinks,
       ...emptyDesignSystem,
-      ...emptyActions,
+      ...emptyInteractions,
       ...emptyEntities,
     });
   });
 
   it("follows a named import alias", () => {
-    expect(compile(fixture("component-alias"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("component-alias"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/target" }],
       globalNavigation: [],
     });
   });
 
   it("attributes a default exported component", () => {
-    expect(compile(fixture("component-default"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("component-default"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/target" }],
     });
   });
 
   it("attributes only the referenced component in a multi-export module", () => {
-    expect(compile(fixture("multi-export-module"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("multi-export-module"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/a" }],
       globalNavigation: [],
     });
   });
 
   it("attributes the same component used on multiple screens", () => {
-    expect(compile(fixture("multi-screen-usage"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("multi-screen-usage"))),
+    ).toMatchObject({
       navigation: [
         { from: "/", to: "/detail/$id" },
         { from: "/other", to: "/detail/$id" },
@@ -68,55 +79,73 @@ describe("navigation v2 component attribution", () => {
   });
 
   it("attributes links when the component is conditionally rendered", () => {
-    expect(compile(fixture("conditional-component"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("conditional-component"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/target" }],
     });
   });
 
   it("attributes links inside a fragment within the component", () => {
-    expect(compile(fixture("fragment-link"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("fragment-link"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/target" }],
     });
   });
 
   it("attributes Link nested under Button asChild", () => {
-    expect(compile(fixture("button-as-child"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("button-as-child"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/target" }],
     });
   });
 
   it("does not traverse an imported child component", () => {
-    expect(compile(fixture("no-recursive-child"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("no-recursive-child"))),
+    ).toMatchObject({
       navigation: [],
     });
   });
 
   it("omits barrel re-export imports", () => {
-    expect(compile(fixture("barrel-import"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("barrel-import"))),
+    ).toMatchObject({
       navigation: [],
     });
   });
 
   it("omits dynamic component bindings", () => {
-    expect(compile(fixture("dynamic-component"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("dynamic-component"))),
+    ).toMatchObject({
       navigation: [],
     });
   });
 
   it("omits conditional Link destinations", () => {
-    expect(compile(fixture("dynamic-to"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("dynamic-to"))),
+    ).toMatchObject({
       navigation: [],
     });
   });
 
   it("omits unknown destinations", () => {
-    expect(compile(fixture("unknown-destination"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("unknown-destination"))),
+    ).toMatchObject({
       navigation: [],
     });
   });
 
   it("dedupes same-file and component-attributed edges", () => {
-    expect(compile(fixture("dedupe-edges"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("dedupe-edges"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/target" }],
     });
   });
@@ -207,25 +236,33 @@ describe("navigation v2 global chrome", () => {
 
 describe("navigation v3 static lowering", () => {
   it("attributes navigation through a literal JSX prop into an imported component", () => {
-    expect(compile(fixture("prop-link-screen"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("prop-link-screen"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/target" }],
     });
   });
 
   it("attributes navigation through a literal prop into a same-file helper component", () => {
-    expect(compile(fixture("prop-link-local-slug"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("prop-link-local-slug"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/detail" }],
     });
   });
 
   it("resolves a local const binding in Link to", () => {
-    expect(compile(fixture("static-local-const"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("static-local-const"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/target" }],
     });
   });
 
   it("resolves static array map property access in Link to", () => {
-    expect(compile(fixture("static-local-map"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("static-local-map"))),
+    ).toMatchObject({
       navigation: [
         { from: "/", to: "/a" },
         { from: "/", to: "/b" },
@@ -234,7 +271,11 @@ describe("navigation v3 static lowering", () => {
   });
 
   it("resolves destructured map parameters in Link to", () => {
-    expect(compile(fixture("static-local-map-destructure"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(
+        compile(fixture("static-local-map-destructure")),
+      ),
+    ).toMatchObject({
       navigation: [
         { from: "/", to: "/x" },
         { from: "/", to: "/y" },

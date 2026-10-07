@@ -1,32 +1,38 @@
 import {
+  type Expression,
   type JsxAttributeLike,
   Node,
   Project,
   type SourceFile,
   SyntaxKind,
 } from "ts-morph";
-import type { Effect } from "../../ir/product-ir.js";
+import type { Effect, InteractionLabels } from "../../ir/product-ir.js";
 import { exportedComponentBody } from "../tanstack/links.js";
-import { submitLabelForFormElement } from "./form-submit-label.js";
+import { submitLabelEvidenceForFormElement } from "./form-submit-label.js";
 import { effectsFromHandler } from "./handler-effects.js";
 import { recognizedHandlerExpression } from "./jsx-handler.js";
-import { extractStaticLabel } from "./jsx-label.js";
+import { extractStaticLabelEvidence } from "./jsx-label.js";
 import { isProvablyDisabled } from "./jsx-static-attributes.js";
 import { importedUiButtonLocalNames } from "./ui-button-import.js";
 
-export interface ActionCandidate {
-  filePath: string;
-  kind: "invoke" | "submit";
-  label?: string;
+export interface InteractionCandidate {
+  attributionFilePath: string;
+  definitionFilePath: string;
+  triggerKind: "activation" | "submit";
+  event: "click" | "submit";
+  tag: string;
+  handlerRef: string;
+  jsxOrdinal: number;
+  usageLocal: string;
+  labels?: InteractionLabels;
   effects: Effect[];
-  discoveryIndex: number;
+  line: number;
 }
 
-export function collectActionCandidates(
+export function collectInteractionCandidates(
   files: readonly string[],
   knownRoutes: ReadonlySet<string>,
-  nextIndex: () => number = createDiscoveryIndex(),
-): ActionCandidate[] {
+): InteractionCandidate[] {
   if (files.length === 0) {
     return [];
   }
@@ -34,12 +40,10 @@ export function collectActionCandidates(
   const project = new Project({
     skipAddingFilesFromTsConfig: true,
   });
-  const candidates: ActionCandidate[] = [];
+  const candidates: InteractionCandidate[] = [];
   for (const file of files) {
     const sourceFile = project.addSourceFileAtPath(file);
-    candidates.push(
-      ...candidatesInFile(sourceFile, file, knownRoutes, nextIndex),
-    );
+    candidates.push(...candidatesInFile(sourceFile, file, knownRoutes, ""));
   }
   return candidates;
 }
@@ -49,8 +53,8 @@ export function candidatesInExportBody(
   exportName: string,
   attributionFilePath: string,
   knownRoutes: ReadonlySet<string>,
-  nextIndex: () => number,
-): ActionCandidate[] {
+  usageLocal: string,
+): InteractionCandidate[] {
   const body = exportedComponentBody(sourceFile, exportName);
   if (body === undefined) {
     return [];
@@ -60,7 +64,7 @@ export function candidatesInExportBody(
     body,
     attributionFilePath,
     knownRoutes,
-    nextIndex,
+    usageLocal,
   );
 }
 
@@ -68,14 +72,14 @@ function candidatesInFile(
   sourceFile: SourceFile,
   attributionFilePath: string,
   knownRoutes: ReadonlySet<string>,
-  nextIndex: () => number,
-): ActionCandidate[] {
+  usageLocal: string,
+): InteractionCandidate[] {
   return candidatesInScope(
     sourceFile,
     sourceFile,
     attributionFilePath,
     knownRoutes,
-    nextIndex,
+    usageLocal,
   );
 }
 
@@ -84,10 +88,12 @@ function candidatesInScope(
   scope: Node,
   attributionFilePath: string,
   knownRoutes: ReadonlySet<string>,
-  nextIndex: () => number,
-): ActionCandidate[] {
+  usageLocal: string,
+): InteractionCandidate[] {
   const uiButtonNames = importedUiButtonLocalNames(sourceFile);
-  const candidates: ActionCandidate[] = [];
+  const candidates: InteractionCandidate[] = [];
+  const nextOrdinal = createOrdinalAllocator();
+  const definitionFilePath = sourceFile.getFilePath();
 
   for (const element of jsxElementsInScope(scope)) {
     const opening = element.getOpeningElement();
@@ -96,8 +102,10 @@ function candidatesInScope(
         sourceFile,
         element,
         attributionFilePath,
+        definitionFilePath,
         knownRoutes,
-        nextIndex,
+        usageLocal,
+        nextOrdinal,
       );
       if (candidate !== undefined) {
         candidates.push(candidate);
@@ -111,9 +119,12 @@ function candidatesInScope(
         sourceFile,
         element.getAttributes(),
         undefined,
+        element.getStartLineNumber(),
         attributionFilePath,
+        definitionFilePath,
         knownRoutes,
-        nextIndex,
+        usageLocal,
+        nextOrdinal,
       );
       if (candidate !== undefined) {
         candidates.push(candidate);
@@ -127,10 +138,13 @@ function candidatesInScope(
       element,
       element.getTagNameNode(),
       element.getAttributes(),
+      element.getStartLineNumber(),
       uiButtonNames,
       attributionFilePath,
+      definitionFilePath,
       knownRoutes,
-      nextIndex,
+      usageLocal,
+      nextOrdinal,
     );
     if (candidate !== undefined) {
       candidates.push(candidate);
@@ -144,10 +158,13 @@ function candidatesInScope(
       element,
       opening.getTagNameNode(),
       opening.getAttributes(),
+      opening.getStartLineNumber(),
       uiButtonNames,
       attributionFilePath,
+      definitionFilePath,
       knownRoutes,
-      nextIndex,
+      usageLocal,
+      nextOrdinal,
     );
     if (candidate !== undefined) {
       candidates.push(candidate);
@@ -155,6 +172,19 @@ function candidatesInScope(
   }
 
   return candidates;
+}
+
+function createOrdinalAllocator(): (
+  definitionFilePath: string,
+  usageLocal: string,
+) => number {
+  const counters = new Map<string, number>();
+  return (definitionFilePath: string, usageLocal: string) => {
+    const key = `${definitionFilePath}\0${usageLocal}`;
+    const ordinal = counters.get(key) ?? 0;
+    counters.set(key, ordinal + 1);
+    return ordinal;
+  };
 }
 
 function jsxElementsInScope(scope: Node): import("ts-morph").JsxElement[] {
@@ -173,42 +203,41 @@ function jsxSelfClosingInScope(
   return scope.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement);
 }
 
-function createDiscoveryIndex(): () => number {
-  let discoveryIndex = 0;
-  return () => {
-    const index = discoveryIndex;
-    discoveryIndex += 1;
-    return index;
-  };
-}
-
 function submitFromForm(
-  sourceFile: import("ts-morph").SourceFile,
+  sourceFile: SourceFile,
   formElement: import("ts-morph").JsxElement,
-  filePath: string,
+  attributionFilePath: string,
+  definitionFilePath: string,
   knownRoutes: ReadonlySet<string>,
-  nextIndex: () => number,
-): ActionCandidate | undefined {
+  usageLocal: string,
+  nextOrdinal: (definitionFilePath: string, usageLocal: string) => number,
+): InteractionCandidate | undefined {
   const opening = formElement.getOpeningElement();
-  const label = submitLabelForFormElement(formElement);
+  const labels = submitLabelEvidenceForFormElement(formElement);
   return submitFromElement(
     sourceFile,
     opening.getAttributes(),
-    label,
-    filePath,
+    labels,
+    opening.getStartLineNumber(),
+    attributionFilePath,
+    definitionFilePath,
     knownRoutes,
-    nextIndex,
+    usageLocal,
+    nextOrdinal,
   );
 }
 
 function submitFromElement(
-  sourceFile: import("ts-morph").SourceFile,
+  sourceFile: SourceFile,
   attributes: readonly JsxAttributeLike[],
-  label: string | undefined,
-  filePath: string,
+  labels: InteractionLabels | undefined,
+  line: number,
+  attributionFilePath: string,
+  definitionFilePath: string,
   knownRoutes: ReadonlySet<string>,
-  nextIndex: () => number,
-): ActionCandidate | undefined {
+  usageLocal: string,
+  nextOrdinal: (definitionFilePath: string, usageLocal: string) => number,
+): InteractionCandidate | undefined {
   if (isProvablyDisabled(attributes)) {
     return undefined;
   }
@@ -216,30 +245,39 @@ function submitFromElement(
   if (handler === undefined) {
     return undefined;
   }
-  const candidate: ActionCandidate = {
-    filePath,
-    kind: "submit",
+  const candidate: InteractionCandidate = {
+    attributionFilePath,
+    definitionFilePath,
+    triggerKind: "submit",
+    event: "submit",
+    tag: "form",
+    handlerRef: handlerRef(handler),
+    jsxOrdinal: nextOrdinal(definitionFilePath, usageLocal),
+    usageLocal,
     effects: effectsFromHandler(sourceFile, handler, knownRoutes),
-    discoveryIndex: nextIndex(),
+    line,
   };
-  if (label !== undefined) {
-    candidate.label = label;
+  if (labels !== undefined) {
+    candidate.labels = labels;
   }
   return candidate;
 }
 
 function invokeFromInteractiveElement(
-  sourceFile: import("ts-morph").SourceFile,
+  sourceFile: SourceFile,
   element:
     | import("ts-morph").JsxElement
     | import("ts-morph").JsxSelfClosingElement,
   tagName: Node,
   attributes: readonly JsxAttributeLike[],
+  line: number,
   uiButtonNames: Set<string>,
-  filePath: string,
+  attributionFilePath: string,
+  definitionFilePath: string,
   knownRoutes: ReadonlySet<string>,
-  nextIndex: () => number,
-): ActionCandidate | undefined {
+  usageLocal: string,
+  nextOrdinal: (definitionFilePath: string, usageLocal: string) => number,
+): InteractionCandidate | undefined {
   if (!isInteractiveButton(tagName, uiButtonNames)) {
     return undefined;
   }
@@ -251,17 +289,34 @@ function invokeFromInteractiveElement(
     return undefined;
   }
 
-  const label = extractStaticLabel(element);
-  const candidate: ActionCandidate = {
-    filePath,
-    kind: "invoke",
+  const labels = extractStaticLabelEvidence(element);
+  const tag = tagName.getText();
+  const candidate: InteractionCandidate = {
+    attributionFilePath,
+    definitionFilePath,
+    triggerKind: "activation",
+    event: "click",
+    tag,
+    handlerRef: handlerRef(handler),
+    jsxOrdinal: nextOrdinal(definitionFilePath, usageLocal),
+    usageLocal,
     effects: effectsFromHandler(sourceFile, handler, knownRoutes),
-    discoveryIndex: nextIndex(),
+    line,
   };
-  if (label !== undefined) {
-    candidate.label = label;
+  if (labels !== undefined) {
+    candidate.labels = labels;
   }
   return candidate;
+}
+
+function handlerRef(handler: Expression): string {
+  if (Node.isIdentifier(handler)) {
+    return handler.getText();
+  }
+  if (Node.isArrowFunction(handler) || Node.isFunctionExpression(handler)) {
+    return "inline";
+  }
+  return "unknown";
 }
 
 function isInteractiveButton(

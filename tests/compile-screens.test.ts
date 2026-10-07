@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/index.js";
+import { stripInteractionIdsFromProduct } from "./helpers/interaction-expect.js";
 
 function fixture(name: string): string {
   return fileURLToPath(
@@ -13,12 +14,12 @@ const emptyDesignSystem = { designSystem: { themes: [] as const } };
 const emptyEntities = { entities: [] as const };
 const emptyGlobalNavigation = { globalNavigation: [] as const };
 const emptyLinks = { links: [] as const, globalLinks: [] as const };
-const emptyActions = { actions: [] as const };
+const emptyInteractions = { interactions: [] as const };
 
 describe("compile screens", () => {
   it("extracts the root route", () => {
-    expect(compile(fixture("root"))).toEqual({
-      schemaVersion: "1",
+    expect(stripInteractionIdsFromProduct(compile(fixture("root")))).toEqual({
+      schemaVersion: "2",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
@@ -27,13 +28,15 @@ describe("compile screens", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       ...emptyLinks,
-      ...emptyActions,
+      ...emptyInteractions,
     });
   });
 
   it("extracts /dashboard", () => {
-    expect(compile(fixture("dashboard"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("dashboard"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: [
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
       ],
@@ -44,13 +47,15 @@ describe("compile screens", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       ...emptyLinks,
-      ...emptyActions,
+      ...emptyInteractions,
     });
   });
 
   it("preserves a dynamic segment", () => {
-    expect(compile(fixture("dynamic-segment"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("dynamic-segment"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: [
         {
           route: "/projects/$projectId",
@@ -64,14 +69,16 @@ describe("compile screens", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       ...emptyLinks,
-      ...emptyActions,
+      ...emptyInteractions,
     });
   });
 
   it("returns one screen per route file", () => {
     // Locks the current deterministic result. Screen order is not a Product IR contract.
-    expect(compile(fixture("multiple"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("multiple"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: [
         { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
         { route: "/", source: { file: "routes/index.tsx" } },
@@ -83,13 +90,15 @@ describe("compile screens", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       ...emptyLinks,
-      ...emptyActions,
+      ...emptyInteractions,
     });
   });
 
   it("ignores unrelated TypeScript", () => {
-    expect(compile(fixture("unrelated"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("unrelated"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: [],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
@@ -98,13 +107,15 @@ describe("compile screens", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       ...emptyLinks,
-      ...emptyActions,
+      ...emptyInteractions,
     });
   });
 
   it("ignores a local function named createFileRoute", () => {
-    expect(compile(fixture("local-name"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("local-name"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: [],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
@@ -113,30 +124,34 @@ describe("compile screens", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       ...emptyLinks,
-      ...emptyActions,
+      ...emptyInteractions,
     });
   });
 
   it("follows a same-file import alias", () => {
-    expect(compile(fixture("aliased"))).toEqual({
-      schemaVersion: "1",
-      screens: [
-        { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
-      ],
-      ...emptyNavigation,
-      ...emptyGlobalNavigation,
-      ...emptyLinks,
-      ...emptyDesignSystem,
-      ...emptyEntities,
-      ...emptyGlobalNavigation,
-      ...emptyLinks,
-      ...emptyActions,
-    });
+    expect(stripInteractionIdsFromProduct(compile(fixture("aliased")))).toEqual(
+      {
+        schemaVersion: "2",
+        screens: [
+          { route: "/dashboard", source: { file: "routes/dashboard.tsx" } },
+        ],
+        ...emptyNavigation,
+        ...emptyGlobalNavigation,
+        ...emptyLinks,
+        ...emptyDesignSystem,
+        ...emptyEntities,
+        ...emptyGlobalNavigation,
+        ...emptyLinks,
+        ...emptyInteractions,
+      },
+    );
   });
 
   it("ignores non-literal route arguments", () => {
-    expect(compile(fixture("non-literal"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("non-literal"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: [{ route: "/login", source: { file: "routes/login.tsx" } }],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
@@ -145,13 +160,15 @@ describe("compile screens", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       ...emptyLinks,
-      ...emptyActions,
+      ...emptyInteractions,
     });
   });
 
   it("does not analyze skipped directories", () => {
-    expect(compile(fixture("skipped-dirs"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("skipped-dirs"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: [{ route: "/visible", source: { file: "src/app.tsx" } }],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
@@ -160,7 +177,7 @@ describe("compile screens", () => {
       ...emptyEntities,
       ...emptyGlobalNavigation,
       ...emptyLinks,
-      ...emptyActions,
+      ...emptyInteractions,
     });
   });
 

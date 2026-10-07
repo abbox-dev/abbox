@@ -1,6 +1,6 @@
 # Architecture
 
-Abbox compiles application source into a framework-independent Product IR. `compile(projectPath)` returns screens, navigation, global navigation, declared design-system colors, actions (with nested effects), and entities, including `schemaVersion`. `abbox compile` writes that same value to `abbox.json`.
+Abbox compiles application source into a framework-independent Product IR. `compile(projectPath)` returns screens, navigation, global navigation, declared design-system colors, interactions (with nested effects), static screen-attributed content, and entities, including `schemaVersion` `"2"`. `abbox compile` writes that same value to `abbox.json`.
 
 ## Package
 
@@ -30,7 +30,9 @@ src/
     css/
       theme-colors.ts
     react/
-      actions.ts
+      interactions.ts
+      interaction-id.ts
+      component-interactions.ts
       component-navigation.ts
       direct-component-imports.ts
       handler-effects.ts
@@ -61,13 +63,13 @@ tests/fixtures/entity-models/
 tests/fixtures/design-system-colors/
 ```
 
-`src/compiler/compile.ts` discovers `.ts`, `.tsx`, and `.css` files (same skip directories for each), extracts TanStack screens, screen-attributed navigation, global navigation from root layout chrome, screen-attributed and global product links from static native anchors, static JSX actions and nested handler effects, declared CSS theme colors, and entities from TypeScript model evidence.
+`src/compiler/compile.ts` discovers `.ts`, `.tsx`, and `.css` files (same skip directories for each), extracts TanStack screens, screen-attributed navigation, global navigation from root layout chrome, screen-attributed and global product links from static native anchors, static JSX interactions and nested handler effects, declared CSS theme colors, and entities from TypeScript model evidence.
 
 TanStack-specific navigation rules live under `src/frameworks/tanstack/` (`links.ts`, `static-link-destination.ts`, `anchor-elements.ts`, `static-href-target.ts`, `root-chrome.ts`) and `src/frameworks/react/component-navigation.ts`, `component-product-links.ts`, and `jsx-literal-props.ts` for direct component attribution and one-hop literal props. Plain `<a href>` screen targets merge into the same navigation lowering as `<Link to>`. Product IR field names (`navigation`, `globalNavigation`, `links`, `globalLinks`) stay framework-independent in `src/ir/product-ir.ts`.
 
 `src/frameworks/typescript/entity-models.ts` emits entities when a file exports an object type or interface and an exported `N[]` / `Array<N>` collection for the same name.
 
-`src/frameworks/react/actions.ts` walks JSX with ts-morph, emits invoke and submit candidates, and attaches extracted effects. `component-actions.ts` attributes supported actions from directly rendered imported component export bodies (same boundary as Navigation V2). `buildActions` in `compile.ts` attaches the screen destination per route module and sorts the result.
+`src/frameworks/react/interactions.ts` walks JSX with ts-morph, emits activation and submit candidates, and attaches extracted effects. `component-interactions.ts` attributes supported interactions from directly rendered imported component export bodies (same boundary as Navigation V2). `build-interactions.ts` assigns deterministic ids, dedupes only true duplicates, attaches screen destinations, and sorts by route, trigger, and id.
 
 `src/frameworks/css/theme-colors.ts` parses CSS with PostCSS, reads `@theme` semantic `--color-*` declarations and `:root` / `.dark` physical custom properties, resolves one-level `var(--x)` aliases per theme, and emits `designSystem.themes` with optional canonical `hex`.
 

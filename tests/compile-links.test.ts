@@ -2,12 +2,13 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/index.js";
 import {
-  emptyActions,
   emptyDesignSystem,
   emptyEntities,
   emptyGlobalNavigation,
+  emptyInteractions,
   emptyNavigation,
 } from "./helpers/empty-ir-fields.js";
+import { stripInteractionIdsFromProduct } from "./helpers/interaction-expect.js";
 
 function fixture(name: string): string {
   return fileURLToPath(
@@ -17,8 +18,10 @@ function fixture(name: string): string {
 
 describe("product links", () => {
   it("extracts same-file anchor links on a screen route", () => {
-    expect(compile(fixture("anchor-same-file"))).toEqual({
-      schemaVersion: "1",
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("anchor-same-file"))),
+    ).toEqual({
+      schemaVersion: "2",
       screens: [{ route: "/", source: { file: "routes/index.tsx" } }],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
@@ -33,13 +36,35 @@ describe("product links", () => {
       ],
       globalLinks: [],
       ...emptyDesignSystem,
-      ...emptyActions,
+      ...emptyInteractions,
       ...emptyEntities,
     });
+    expect(compile(fixture("anchor-same-file")).content).toEqual([
+      {
+        id: "cnt_6128471a38591fa6",
+        route: "/",
+        source: { file: "routes/index.tsx", line: 9 },
+        definition: { file: "routes/index.tsx" },
+        kind: "text",
+        value: { text: "Jump to intro" },
+        structure: { element: "div" },
+      },
+      {
+        id: "cnt_7dc3f65dfb5dcfd3",
+        route: "/",
+        source: { file: "routes/index.tsx", line: 10 },
+        definition: { file: "routes/index.tsx" },
+        kind: "text",
+        value: { text: "Jump to intro" },
+        structure: { element: "a" },
+      },
+    ]);
   });
 
   it("extracts external https links on a screen route", () => {
-    expect(compile(fixture("external-same-file"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("external-same-file"))),
+    ).toMatchObject({
       links: [
         {
           route: "/",
@@ -54,7 +79,9 @@ describe("product links", () => {
   });
 
   it("extracts resource paths and download metadata", () => {
-    expect(compile(fixture("resource-download"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("resource-download"))),
+    ).toMatchObject({
       links: [
         {
           route: "/",
@@ -69,7 +96,9 @@ describe("product links", () => {
   });
 
   it("extracts protocol links such as mailto", () => {
-    expect(compile(fixture("protocol-mailto"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("protocol-mailto"))),
+    ).toMatchObject({
       links: [
         {
           route: "/",
@@ -83,7 +112,9 @@ describe("product links", () => {
   });
 
   it("lowers plain anchor screen hrefs into navigation, not links", () => {
-    expect(compile(fixture("anchor-navigation"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("anchor-navigation"))),
+    ).toMatchObject({
       navigation: [{ from: "/", to: "/about" }],
       links: [],
       globalLinks: [],
@@ -91,7 +122,9 @@ describe("product links", () => {
   });
 
   it("attributes protocol links through a one-hop imported component", () => {
-    expect(compile(fixture("component-attributed"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("component-attributed"))),
+    ).toMatchObject({
       links: [
         {
           route: "/",
@@ -107,7 +140,9 @@ describe("product links", () => {
 
 describe("global product links", () => {
   it("extracts non-screen anchor and external links from root chrome", () => {
-    expect(compile(fixture("global-chrome-links"))).toMatchObject({
+    expect(
+      stripInteractionIdsFromProduct(compile(fixture("global-chrome-links"))),
+    ).toMatchObject({
       globalLinks: [
         {
           kind: "anchor",

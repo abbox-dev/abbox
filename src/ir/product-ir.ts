@@ -1,4 +1,4 @@
-export const productIrSchemaVersion = "1" as const;
+export const productIrSchemaVersion = "2" as const;
 
 export interface ScreenSource {
   file: string;
@@ -34,8 +34,33 @@ export interface DesignSystem {
   themes: DesignSystemTheme[];
 }
 
-export interface ActionSource {
+export interface InteractionSource {
   file: string;
+  line: number;
+}
+
+export type InteractionTriggerKind = "activation" | "submit";
+
+export interface InteractionTrigger {
+  kind: InteractionTriggerKind;
+}
+
+export type InteractionLabelFrom =
+  | "aria-label"
+  | "title"
+  | "text"
+  | "submit-button";
+
+export interface InteractionLabels {
+  static: string;
+  from: InteractionLabelFrom;
+}
+
+export type InteractionEvent = "click" | "submit";
+
+export interface InteractionEvidence {
+  event: InteractionEvent;
+  tag: string;
 }
 
 export interface StateEffect {
@@ -55,11 +80,13 @@ export interface NavigationEffect {
 
 export type Effect = StateEffect | SearchEffect | NavigationEffect;
 
-export interface Action {
+export interface Interaction {
+  id: string;
   route: string;
-  kind: "invoke" | "submit";
-  label?: string;
-  source: ActionSource;
+  source: InteractionSource;
+  trigger: InteractionTrigger;
+  labels?: InteractionLabels;
+  evidence: InteractionEvidence;
   effects: Effect[];
 }
 
@@ -76,6 +103,32 @@ export interface Entity {
   name: string;
   fields: EntityField[];
   source: EntitySource;
+}
+
+export type ContentValue = { text: string } | { alternatives: string[] };
+
+export interface ContentSource {
+  file: string;
+  line: number;
+}
+
+export interface ContentDefinition {
+  file: string;
+}
+
+export interface ContentStructure {
+  element: string;
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
+}
+
+export interface Content {
+  id: string;
+  route: string;
+  source: ContentSource;
+  definition: ContentDefinition;
+  kind: "text" | "alt" | "placeholder";
+  value: ContentValue;
+  structure: ContentStructure;
 }
 
 export interface GlobalNavigation {
@@ -157,7 +210,8 @@ export interface ProductIr {
   links: Link[];
   globalLinks: GlobalLink[];
   designSystem: DesignSystem;
-  actions: Action[];
+  interactions: Interaction[];
+  content: Content[];
   entities: Entity[];
 }
 

@@ -1,11 +1,8 @@
 import { statSync } from "node:fs";
 import path from "node:path";
 import { extractDesignSystem } from "../frameworks/css/theme-colors.js";
-import {
-  type ActionCandidate,
-  collectActionCandidates,
-} from "../frameworks/react/actions.js";
-import { collectComponentAttributedActionCandidates } from "../frameworks/react/component-actions.js";
+import { collectComponentAttributedContentCandidates } from "../frameworks/react/component-content.js";
+import { collectComponentAttributedInteractionCandidates } from "../frameworks/react/component-interactions.js";
 import { collectComponentAttributedNavigation } from "../frameworks/react/component-navigation.js";
 import {
   collectComponentAttributedAnchorNavigation,
@@ -13,6 +10,11 @@ import {
   dedupeAndSortLinks,
   productLinkHitsToLinks,
 } from "../frameworks/react/component-product-links.js";
+import {
+  type ContentCandidate,
+  collectRouteFileContentCandidates,
+} from "../frameworks/react/content-candidates.js";
+import { collectInteractionCandidates } from "../frameworks/react/interactions.js";
 import { collectScopedAnchors } from "../frameworks/tanstack/anchor-elements.js";
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
 import { collectScopedStaticLinks } from "../frameworks/tanstack/links.js";
@@ -23,13 +25,14 @@ import {
 } from "../frameworks/tanstack/root-chrome.js";
 import { collectEntityCandidates } from "../frameworks/typescript/entity-models.js";
 import {
-  type Action,
   type Entity,
   emptyDesignSystem,
   type Navigation,
   type ProductIr,
   productIrSchemaVersion,
 } from "../ir/product-ir.js";
+import { buildContent } from "./build-content.js";
+import { buildInteractions } from "./build-interactions.js";
 import {
   discoverSourceFiles,
   toProjectRelativePath,
@@ -121,29 +124,34 @@ export function compile(projectPath: string): ProductIr {
       ...componentProductLinks.productLinkHits,
     ]),
   );
-  let actionDiscoveryIndex = 0;
-  const nextActionDiscoveryIndex = (): number => {
-    const index = actionDiscoveryIndex;
-    actionDiscoveryIndex += 1;
-    return index;
-  };
-  const sameFileActionCandidates = collectActionCandidates(
+  const sameFileInteractionCandidates = collectInteractionCandidates(
     files,
     knownRoutes,
-    nextActionDiscoveryIndex,
   );
-  const componentActionCandidates = collectComponentAttributedActionCandidates(
+  const componentInteractionCandidates =
+    collectComponentAttributedInteractionCandidates(
+      projectRoot,
+      files,
+      screensByFile,
+      knownRoutes,
+    );
+  const interactionCandidates = [
+    ...sameFileInteractionCandidates,
+    ...componentInteractionCandidates,
+  ];
+  const interactions = buildInteractions(
+    projectRoot,
+    screensByFile,
+    interactionCandidates,
+  );
+
+  const contentCandidates = collectContentCandidates(
+    screensByFile,
     projectRoot,
     files,
-    screensByFile,
-    knownRoutes,
-    nextActionDiscoveryIndex,
   );
-  const actionCandidates: ActionCandidate[] = [
-    ...sameFileActionCandidates,
-    ...componentActionCandidates,
-  ];
-  const actions = buildActions(projectRoot, screensByFile, actionCandidates);
+  const content = buildContent(projectRoot, screensByFile, contentCandidates);
+
   const cssFiles = discoverStylesheetFiles(projectRoot);
   const designSystem =
     cssFiles.length === 0
@@ -162,9 +170,35 @@ export function compile(projectPath: string): ProductIr {
     links,
     globalLinks,
     designSystem,
-    actions,
+    interactions,
+    content,
     entities,
   };
+}
+
+function collectContentCandidates(
+  screensByFile: Map<string, string[]>,
+  projectRoot: string,
+  screenFilePaths: readonly string[],
+): ContentCandidate[] {
+  const candidates: ContentCandidate[] = [];
+
+  for (const [filePath, routes] of screensByFile) {
+    if (routes.length !== 1) {
+      continue;
+    }
+    candidates.push(...collectRouteFileContentCandidates(filePath));
+  }
+
+  candidates.push(
+    ...collectComponentAttributedContentCandidates(
+      projectRoot,
+      screenFilePaths,
+      screensByFile,
+    ),
+  );
+
+  return candidates;
 }
 
 function buildEntities(
@@ -194,66 +228,6 @@ function buildEntities(
   });
 
   return entities;
-}
-
-function buildActions(
-  projectRoot: string,
-  screensByFile: Map<string, string[]>,
-  candidates: readonly ActionCandidate[],
-): Action[] {
-  const actions: Array<Action & { discoveryIndex: number }> = [];
-
-  for (const candidate of candidates) {
-    const routesInFile = screensByFile.get(candidate.filePath);
-    if (routesInFile === undefined || routesInFile.length !== 1) {
-      continue;
-    }
-
-    const route = routesInFile[0];
-    if (route === undefined) {
-      continue;
-    }
-
-    const action: Action & { discoveryIndex: number } = {
-      route,
-      kind: candidate.kind,
-      source: {
-        file: toProjectRelativePath(projectRoot, candidate.filePath),
-      },
-      effects: candidate.effects,
-      discoveryIndex: candidate.discoveryIndex,
-    };
-    if (candidate.label !== undefined) {
-      action.label = candidate.label;
-    }
-    actions.push(action);
-  }
-
-  const labelSortKey = (label: string | undefined): string => label ?? "";
-
-  actions.sort((left, right) => {
-    const byRoute = left.route.localeCompare(right.route);
-    if (byRoute !== 0) {
-      return byRoute;
-    }
-    const byKind = left.kind.localeCompare(right.kind);
-    if (byKind !== 0) {
-      return byKind;
-    }
-    const byLabel = labelSortKey(left.label).localeCompare(
-      labelSortKey(right.label),
-    );
-    if (byLabel !== 0) {
-      return byLabel;
-    }
-    const byFile = left.source.file.localeCompare(right.source.file);
-    if (byFile !== 0) {
-      return byFile;
-    }
-    return left.discoveryIndex - right.discoveryIndex;
-  });
-
-  return actions.map(({ discoveryIndex: _, ...action }) => action);
 }
 
 function groupRoutesByFile(
