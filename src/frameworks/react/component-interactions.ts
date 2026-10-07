@@ -1,18 +1,20 @@
 import { Project } from "ts-morph";
 import { exportedComponentBody } from "../tanstack/links.js";
-import { type ActionCandidate, candidatesInExportBody } from "./actions.js";
 import {
   directComponentImportsInFile,
   jsxDirectComponentLocalNames,
 } from "./direct-component-imports.js";
+import {
+  candidatesInExportBody,
+  type InteractionCandidate,
+} from "./interactions.js";
 
-export function collectComponentAttributedActionCandidates(
+export function collectComponentAttributedInteractionCandidates(
   projectRoot: string,
   screenFilePaths: readonly string[],
   screensByFile: Map<string, string[]>,
   knownRoutes: ReadonlySet<string>,
-  nextIndex: () => number,
-): ActionCandidate[] {
+): InteractionCandidate[] {
   if (screenFilePaths.length === 0) {
     return [];
   }
@@ -20,7 +22,7 @@ export function collectComponentAttributedActionCandidates(
   const project = new Project({
     skipAddingFilesFromTsConfig: true,
   });
-  const candidates: ActionCandidate[] = [];
+  const candidates: InteractionCandidate[] = [];
 
   for (const routeFilePath of screenFilePaths) {
     const routesInFile = screensByFile.get(routeFilePath);
@@ -39,8 +41,6 @@ export function collectComponentAttributedActionCandidates(
       directImports,
     );
 
-    const attributedForRoute: ActionCandidate[] = [];
-
     for (const localName of usedLocals) {
       const entry = directImports.find((item) => item.localName === localName);
       if (entry === undefined) {
@@ -54,36 +54,17 @@ export function collectComponentAttributedActionCandidates(
         continue;
       }
 
-      attributedForRoute.push(
+      candidates.push(
         ...candidatesInExportBody(
           componentFile,
           entry.exportName,
           routeFilePath,
           knownRoutes,
-          nextIndex,
+          localName,
         ),
       );
     }
-
-    candidates.push(...dedupeAttributedForRoute(attributedForRoute));
   }
 
   return candidates;
-}
-
-function dedupeAttributedForRoute(
-  candidates: readonly ActionCandidate[],
-): ActionCandidate[] {
-  const byKey = new Map<string, ActionCandidate>();
-  for (const candidate of candidates) {
-    const key = `${candidate.kind}\0${candidate.label ?? ""}`;
-    const existing = byKey.get(key);
-    if (
-      existing === undefined ||
-      candidate.discoveryIndex < existing.discoveryIndex
-    ) {
-      byKey.set(key, candidate);
-    }
-  }
-  return [...byKey.values()];
 }

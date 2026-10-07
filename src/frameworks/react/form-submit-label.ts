@@ -1,29 +1,43 @@
 import { Node, SyntaxKind } from "ts-morph";
-import { extractStaticLabel } from "./jsx-label.js";
+import type { InteractionLabels } from "../../ir/product-ir.js";
+import { extractStaticLabelEvidence } from "./jsx-label.js";
 import { staticStringFromJsxAttribute } from "./jsx-static-attributes.js";
 
 export function submitLabelForFormElement(
   formElement: import("ts-morph").JsxElement,
 ): string | undefined {
+  return submitLabelEvidenceForFormElement(formElement)?.static;
+}
+
+export function submitLabelEvidenceForFormElement(
+  formElement: import("ts-morph").JsxElement,
+): InteractionLabels | undefined {
   const opening = formElement.getOpeningElement();
   const formAria = staticStringFromJsxAttribute(
     opening.getAttributes(),
     "aria-label",
   );
   if (formAria !== undefined && formAria.length > 0) {
-    return formAria;
+    return { static: formAria, from: "aria-label" };
   }
 
-  return submitButtonLabelInForm(formElement);
+  const fromButton = submitButtonLabelEvidenceInForm(formElement);
+  if (fromButton === undefined) {
+    return undefined;
+  }
+  return {
+    static: fromButton.static,
+    from: fromButton.from === "text" ? "submit-button" : fromButton.from,
+  };
 }
 
-function submitButtonLabelInForm(
+function submitButtonLabelEvidenceInForm(
   formElement: import("ts-morph").JsxElement,
-): string | undefined {
+): import("./jsx-label.js").StaticLabelEvidence | undefined {
   for (const element of formElement.getDescendantsOfKind(
     SyntaxKind.JsxElement,
   )) {
-    const label = labelFromSubmitControl(element);
+    const label = labelEvidenceFromSubmitControl(element);
     if (label !== undefined) {
       return label;
     }
@@ -31,7 +45,7 @@ function submitButtonLabelInForm(
   for (const element of formElement.getDescendantsOfKind(
     SyntaxKind.JsxSelfClosingElement,
   )) {
-    const label = labelFromSubmitSelfClosing(element);
+    const label = labelEvidenceFromSubmitSelfClosing(element);
     if (label !== undefined) {
       return label;
     }
@@ -39,9 +53,9 @@ function submitButtonLabelInForm(
   return undefined;
 }
 
-function labelFromSubmitControl(
+function labelEvidenceFromSubmitControl(
   element: import("ts-morph").JsxElement,
-): string | undefined {
+): import("./jsx-label.js").StaticLabelEvidence | undefined {
   const opening = element.getOpeningElement();
   if (!isSubmitButtonTag(opening.getTagNameNode())) {
     return undefined;
@@ -49,19 +63,19 @@ function labelFromSubmitControl(
   if (!isSubmitType(opening.getAttributes())) {
     return undefined;
   }
-  return extractStaticLabel(element);
+  return extractStaticLabelEvidence(element);
 }
 
-function labelFromSubmitSelfClosing(
+function labelEvidenceFromSubmitSelfClosing(
   element: import("ts-morph").JsxSelfClosingElement,
-): string | undefined {
+): import("./jsx-label.js").StaticLabelEvidence | undefined {
   if (!isSubmitButtonTag(element.getTagNameNode())) {
     return undefined;
   }
   if (!isSubmitType(element.getAttributes())) {
     return undefined;
   }
-  return extractStaticLabel(element);
+  return extractStaticLabelEvidence(element);
 }
 
 function isSubmitButtonTag(tagName: import("ts-morph").Node): boolean {

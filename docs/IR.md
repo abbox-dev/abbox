@@ -4,7 +4,7 @@
 
 ```json
 {
-  "schemaVersion": "1",
+  "schemaVersion": "2",
   "screens": [
     {
       "route": "/",
@@ -68,15 +68,46 @@
       }
     ]
   },
-  "actions": [
+  "interactions": [
     {
+      "id": "int_9da7b05701c7ce23",
       "route": "/",
-      "kind": "invoke",
-      "label": "Save",
       "source": {
-        "file": "routes/index.tsx"
+        "file": "routes/index.tsx",
+        "line": 12
+      },
+      "trigger": {
+        "kind": "activation"
+      },
+      "labels": {
+        "static": "Save",
+        "from": "text"
+      },
+      "evidence": {
+        "event": "click",
+        "tag": "button"
       },
       "effects": []
+    }
+  ],
+  "content": [
+    {
+      "id": "cnt_63e456f41c663793",
+      "route": "/",
+      "source": {
+        "file": "routes/index.tsx",
+        "line": 12
+      },
+      "definition": {
+        "file": "routes/index.tsx"
+      },
+      "kind": "text",
+      "value": {
+        "text": "Save"
+      },
+      "structure": {
+        "element": "button"
+      }
     }
   ],
   "entities": [
@@ -94,7 +125,11 @@
 }
 ```
 
-`schemaVersion` is the Product IR contract, not the npm package version. It is the string `"1"`. It becomes `"2"`, `"3"`, and so on only when an existing field is removed, renamed, changes type, or changes meaning. Adding a compatible field does not change it. Readers ignore unknown fields. A missing additive field means that part of the product is not present.
+`schemaVersion` is the Product IR contract, not the npm package version. Current output is `"2"`. It becomes `"3"`, and so on only when an existing field is removed, renamed, changes type, or changes meaning. Adding a compatible field within a major version does not change it. Readers ignore unknown fields. A missing additive field means that part of the product is not present.
+
+**Schema v1 → v2:** `actions[]` is removed. Use `interactions[]` instead. `kind: "invoke"` becomes `trigger.kind: "activation"`. `kind: "submit"` becomes `trigger.kind: "submit"`. A flat `label` becomes `labels.static` plus `labels.from`. Effects remain nested on each interaction. The compiler emits deterministic evidence only; human product interpretation belongs to downstream tools (for example AI), not to `abbox.json`.
+
+**Viewer migration (external):** read `interactions` instead of `actions`; map `trigger.kind` `activation` / `submit`; display `labels.static` where a single label is shown; keep rendering `effects` under each interaction.
 
 `route` is the user-facing destination. `source.file` is the project-relative path of the module that owns that destination, using `/` separators.
 
@@ -152,33 +187,23 @@ Themes are emitted in order: `default`, then `dark`. Only selectors that match e
 
 Each color token has `name`, `value`, optional `hex`, and `source.file`. `value` is the resolved physical color when alias resolution succeeds; otherwise the declared text. `hex` is uppercase canonical sRGB `#RRGGBB` or `#RRGGBBAA` when the value is a single static color. Conflicting declarations with the same theme and name but different values are all kept. Exact duplicates with the same theme, name, value, and `source.file` collapse to one entry. Near-identical colors are never merged.
 
-`actions` is always present. It lists user interaction affordances the compiler can attribute to a discovered screen.
+`interactions` is always present. It lists user-triggered behavioral evidence the compiler can attribute to a discovered screen. An **interaction** is framework-independent evidence (trigger, labels, handler facts, effects) without asserting product intent. Downstream tools interpret that evidence.
 
-An action is recorded when the compiler can attribute it to exactly one extracted screen. Same-file attribution applies when the action candidate appears in a route module that defines exactly one screen; its `route` is that screen's destination and `source.file` is that route module.
+Attribution uses the same screen ownership rules as screen-attributed `navigation`: same-file route modules with exactly one screen; one-hop directly rendered imported component bodies with the same conservative import rules. `source.file` is always the owning route module. `source.line` is the start line of the control in source (provenance and disambiguation; not part of interaction identity).
 
-Component attribution applies when a route module defines exactly one screen, directly renders an imported component (same conservative import and JSX rules as screen-attributed `navigation`), and the action candidate appears in that component's exported function body. Those actions use the same `route` and `source.file` as the route module (screen ownership), not the component module path.
+`id` is a deterministic string `int_` plus 16 hex digits. Identity is a SHA-256 digest of pipe-separated material documented in `src/frameworks/react/interaction-id.ts`: schema tag `v2`, `route`, attribution file, definition file (module where the JSX control appears), `trigger.kind`, `evidence.event`, `evidence.tag`, static `handlerRef`, `jsxOrdinal` (discovery order within definition module and usage instance), and `usageLocal` (route JSX local name for component-attributed controls, else empty). Labels, effects, and source line are excluded from `id`. A future `fingerprint` field may cover behavioral change without renaming the interaction.
 
-Actions in shared components that are not directly rendered by a qualifying route module, files without a screen, route modules with more than one extracted screen, barrel re-exports, unresolved imports, nested imported child components, and other unsupported cases are omitted. Actions in root layout chrome are not copied onto every screen. There is no `globalActions` list.
+Duplicate discovery of the same underlying control collapses to one interaction. Distinct controls keep distinct ids even when labels match. Component instances rendered multiple times (for example two `<Card />` siblings) produce separate interactions when `usageLocal` differs.
 
-`kind` is `invoke` or `submit`. `invoke` means the user can activate a control with a statically recognized handler. `submit` means the user can submit a form with a statically recognized `onSubmit` handler. These names describe product interaction, not DOM event types.
+`trigger.kind` is `activation` (formerly `invoke`) or `submit`. `evidence.event` is `click` or `submit`. `evidence.tag` is the static JSX tag name when known (for example `button`, `Button`, `form`).
 
-Supported JSX in v1 (compiler rules, not IR fields):
+`labels.static` and `labels.from` record how the label was obtained: `aria-label`, `title`, `text`, or `submit-button`. Alternative or conditional labels are not emitted yet.
 
-- Native `<button>` with recognized `onClick`
-- Native `<form>` with recognized `onSubmit`
-- `<Button>` with recognized `onClick` when `Button` is a named import from a `ui/button` module path (for example `@/components/ui/button` or a relative path ending in `components/ui/button` or `ui/button`)
+Supported JSX (compiler rules, not IR fields): native `<button>` / `<form>` and shadcn-style `<Button>` from `ui/button` imports, with recognized `onClick` / `onSubmit` handlers (identifier, arrow, or function expression only).
 
-Recognized handlers are identifier references, arrow functions, or function expressions only. Conditional, logical, call, and member-expression handlers are not recognized.
+TanStack `<Link>` navigation is not duplicated as interactions.
 
-Optional `label` comes from a static `aria-label` or from static JSX text children (whitespace normalized). If any JSX expression appears among those children at any depth, the child-derived label is omitted rather than partially reconstructed from surrounding static text. Expression-only children therefore omit the label; a static `aria-label` still wins over dynamic children.
-
-A form with `onSubmit` emits one `submit` action. Descendant `type="button"` controls with recognized `onClick` still emit `invoke`. A native `<button>` without `type` inside a form is treated as a submit control; it does not emit `invoke` without its own recognized `onClick`. A submit control with its own recognized `onClick` may emit `invoke` in addition to the form `submit`.
-
-TanStack `<Link>` navigation is not duplicated as actions. API calls, `navigate()` / `redirect()` as screen navigation, actual color usage in components, and line or column positions are not in this IR yet.
-
-`effects` is always present on an action this compiler emits. `schemaVersion` stays `"1"`. Effects are nested on the action that caused them. They stay in source order and are not sorted or deduplicated.
-
-An action means the user can trigger that interaction. An effect means a supported direct consequence was extracted from the analyzed handler. `"effects": []` means no supported effect was extracted. It does not mean the action does nothing: the handler may call unsupported or cross-file code.
+`effects` is always present on each interaction. Effects stay in source order and are not deduplicated. `"effects": []` means no supported effect was extracted, not that nothing happens at runtime.
 
 The analyzed body is the inline arrow function or function expression. When the handler is an identifier, the compiler follows one same-file binding that resolves unambiguously to a function declaration, an arrow initializer, or a function-expression initializer, then analyzes that body. It does not follow calls inside that function, imports, parameters, props, destructured hook methods, or other files.
 
@@ -188,13 +213,29 @@ Only a concise arrow call, or a call statement at the top of that body, is inspe
 
 `kind: "search"` is a TanStack search update that stays on the current destination. The callee must be a local binding of `useNavigate()` imported from `@tanstack/react-router`, or of `Route.useNavigate()` where `Route` is the local `createFileRoute("...")` binding in that file. An arbitrary `Something.useNavigate()` does not qualify. The call has one object argument that contains `search`, and `to` is absent or the literal `"."`. Search keys and values are not emitted. A `to` that names another destination, or a dynamic `to`, is not a search effect.
 
-`kind: "navigation"` is imperative navigation to another discovered screen caused by an action handler. The callee must be the same TanStack `useNavigate` / `Route.useNavigate` binding as for `search`. The call has one object argument with a static string `to` that resolves to a discovered `Screen.route`. Local functions named `navigate` do not qualify. Declarative `<Link>` / `<a href>` screen transitions remain in `navigation` / `globalNavigation`, not as navigation effects.
+`kind: "navigation"` is imperative navigation to another discovered screen caused by an interaction handler. The callee must be the same TanStack `useNavigate` / `Route.useNavigate` binding as for `search`. The call has one object argument with a static string `to` that resolves to a discovered `Screen.route`. Local functions named `navigate` do not qualify. Declarative `<Link>` / `<a href>` screen transitions remain in `navigation` / `globalNavigation`, not as navigation effects.
 
-Optional `label` on actions uses static `aria-label`, then static `title`, then static visible control text. For `submit`, a static `aria-label` on the `<form>` wins; otherwise the label comes from a statically identifiable submit `<button>` inside the form. A control with a provably static `disabled` attribute is omitted.
+Label extraction uses static `aria-label`, then `title`, then static visible control text (same precedence as schema v1 `actions[].label`). For `submit`, form `aria-label` wins; otherwise a static submit `<button>` label inside the form. Provably `disabled` controls are omitted.
 
-`kind: "submit"` remains an action kind. It is not an effect. `preventDefault()` is not an effect.
+`trigger.kind: "submit"` is not an effect. `preventDefault()` is not an effect.
 
-Storage, network, mutations, server functions, imported helpers, writes that happen later in `useEffect`, passive inputs without activation handlers, and clicks that are not already actions are not effects.
+Storage, network, mutations, server functions, imported helpers, writes that happen later in `useEffect`, passive inputs without activation handlers, and clicks that are not already interactions are not effects.
+
+`content` is always present. It lists statically determinable user-visible textual evidence attributable to a discovered screen. `content` answers what text the user can see on that screen. It is intentionally separate from `interactions`, `links`, and `navigation`: a visible button or link label may appear both as `content` and as `interaction.labels` or link `label`.
+
+Each entry has a stable `id` (`cnt_` plus 16 hex digits from SHA-256), `route`, `source` (`file` and `line` in the attributing route module), `definition.file` (the module where the JSX or attribute lives), `kind` (`text`, `alt`, or `placeholder`), `value`, and `structure`.
+
+`value` is either `{ "text": "..." }` for one known static string or `{ "alternatives": ["...", "..."] }` for mutually exclusive static branches (for example a ternary with static arms). The compiler does not pick which alternative is active at runtime.
+
+`structure.element` is the JSX host tag (`h1`–`h6`, `p`, `span`, `div`, `button`, `a`, and other supported hosts). `structure.headingLevel` is set for `h1`–`h6`.
+
+Supported static text evidence (compiler rules): JSX text; static string JSX expressions; static template literals without interpolation; same-file `const` string bindings in module or enclosing function scope; nested static child text within supported hosts; static `alt` on `img`; static `placeholder` on `input` / `textarea`. Dynamic runtime values (props, API data, calls, member access) are omitted.
+
+Attribution matches screen `interactions`: same-file route modules with exactly one screen, plus one-hop directly imported exported components rendered from that route. `source.file` is the route module; `definition.file` is the route module or the component module. There is no `globalContent` yet—shared chrome copy is a known gap and is not duplicated on every screen.
+
+Content IDs hash `route`, project-relative `attributionFile`, `definitionFile`, `usageLocal` (component import local name, empty for route-file JSX), `kind`, `element`, and `structPath` (comma-separated JSX child indices from the attribution scope root). Text, alternatives, and `source.line` are excluded so text edits preserve IDs. Inserting unrelated lines above the host preserves IDs. Inserting JSX siblings before the host, wrapping elements, or reordering JSX may change IDs.
+
+Identical visible strings at different structural locations remain distinct entries. Deduplication applies only when structural identity proves the same candidate was discovered twice. Entries are sorted by `route`, then `source.line`, then `id`.
 
 `entities` is always present. It lists product record concepts the compiler can justify from static evidence in v1.
 
@@ -211,4 +252,4 @@ If the same entity `name` is independently evidenced in more than one source fil
 
 Entities are sorted by `name`, then `source.file`. Fields are sorted by `name`.
 
-Entity usage on screens, actions, or effects, route-parameter inference, Supabase or SQL, loaders, React Query, APIs, and cross-file type resolution are not in this IR yet.
+Entity usage on screens, interactions, or effects, route-parameter inference, Supabase or SQL, loaders, React Query, APIs, and cross-file type resolution are not in this IR yet.

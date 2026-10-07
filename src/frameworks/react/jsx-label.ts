@@ -1,20 +1,38 @@
 import { type JsxChild, type JsxElement, Node } from "ts-morph";
+import type { InteractionLabelFrom } from "../../ir/product-ir.js";
 import { staticStringFromJsxAttribute as staticStringFromAttributes } from "./jsx-static-attributes.js";
+
+export interface StaticLabelEvidence {
+  static: string;
+  from: InteractionLabelFrom;
+}
 
 export function extractStaticLabel(
   element: JsxElement | import("ts-morph").JsxSelfClosingElement,
 ): string | undefined {
+  return extractStaticLabelEvidence(element)?.static;
+}
+
+export function extractStaticLabelEvidence(
+  element: JsxElement | import("ts-morph").JsxSelfClosingElement,
+): StaticLabelEvidence | undefined {
   const attributes = Node.isJsxElement(element)
     ? element.getOpeningElement().getAttributes()
     : element.getAttributes();
   const ariaLabel = staticStringFromAttributes(attributes, "aria-label");
   if (ariaLabel !== undefined) {
-    return normalizeWhitespace(ariaLabel);
+    const staticLabel = normalizeWhitespace(ariaLabel);
+    return staticLabel.length === 0
+      ? undefined
+      : { static: staticLabel, from: "aria-label" };
   }
 
   const title = staticStringFromAttributes(attributes, "title");
   if (title !== undefined) {
-    return normalizeWhitespace(title);
+    const staticLabel = normalizeWhitespace(title);
+    return staticLabel.length === 0
+      ? undefined
+      : { static: staticLabel, from: "title" };
   }
 
   if (!Node.isJsxElement(element)) {
@@ -26,7 +44,7 @@ export function extractStaticLabel(
     return undefined;
   }
   const trimmed = normalizeWhitespace(text);
-  return trimmed.length === 0 ? undefined : trimmed;
+  return trimmed.length === 0 ? undefined : { static: trimmed, from: "text" };
 }
 
 function collectStaticText(children: readonly JsxChild[]): string | undefined {
