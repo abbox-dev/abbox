@@ -27,6 +27,26 @@
       }
     }
   ],
+  "links": [
+    {
+      "route": "/",
+      "kind": "anchor",
+      "hash": "pricing",
+      "label": "Pricing",
+      "source": {
+        "file": "routes/index.tsx"
+      }
+    }
+  ],
+  "globalLinks": [
+    {
+      "kind": "external",
+      "url": "https://example.com",
+      "source": {
+        "file": "components/SiteFooter.tsx"
+      }
+    }
+  ],
   "designSystem": {
     "themes": [
       {
@@ -103,6 +123,21 @@ Absence of `globalNavigation` entries in older `schemaVersion: "1"` documents, o
 Consumers may treat `globalNavigation` destinations as reachable from any discovered file-route screen when building graphs or journeys, subject to the documented scope of the chrome evidence. The compiler does not materialize those implied edges into `navigation`.
 
 Duplicate `to` values in `globalNavigation` collapse to one entry, sorted by `to` then `source.file`. The order of `globalNavigation` is not part of the Product IR contract.
+
+`links` and `globalLinks` are always present. They describe user-visible static destinations that are not internal screen transitions in `navigation` / `globalNavigation`.
+
+`links` are attributed to a discovered screen (`route` is a `Screen.route`). Each entry is a discriminated union on `kind`:
+
+- `anchor` — same-document fragment (`hash` without leading `#`)
+- `external` — `http://` or `https://` URL
+- `resource` — static path to a file or asset (not a discovered screen); optional `download: true` when a boolean `download` attribute is provably present
+- `protocol` — `mailto:`, `tel:`, or `sms:` URL
+
+`globalLinks` use the same `kind` variants without `route`. They come from persistent root chrome using the same chrome evidence rules as `globalNavigation`.
+
+Plain native `<a href="...">` uses the same static resolution machinery as TanStack `<Link to="...">` where applicable. When `href` resolves to a discovered screen destination, it lowers to `navigation` or `globalNavigation` (including `href="/screen#fragment"` as navigation to the screen plus an optional `anchor` link for the fragment). Dynamic `href`, `javascript:`, and unknown targets are omitted.
+
+Optional `label` is a conservative static text label from element children when extractable. Duplicate links collapse using `route` (when present), `kind`, target (`hash`, `url`, or `path`), `label`, `source.file`, and `download`. Sort order is not part of the Product IR contract.
 
 `designSystem.themes` is always present. It is empty when no recognized runtime theme exists in project CSS.
 

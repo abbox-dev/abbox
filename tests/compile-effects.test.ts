@@ -10,6 +10,7 @@ function fixture(name: string): string {
 
 const emptyNavigation = { navigation: [] as const };
 const emptyGlobalNavigation = { globalNavigation: [] as const };
+const emptyLinks = { links: [] as const, globalLinks: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
 
 function invoke(
@@ -165,6 +166,7 @@ describe("compile effects", () => {
       ],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
     });
   });

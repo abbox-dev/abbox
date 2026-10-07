@@ -19,6 +19,7 @@ const emptyNavigation = { navigation: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
 const emptyEntities = { entities: [] as const };
 const emptyGlobalNavigation = { globalNavigation: [] as const };
+const emptyLinks = { links: [] as const, globalLinks: [] as const };
 
 function invoke(
   route: string,
@@ -58,9 +59,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Save")],
     });
   });
@@ -71,9 +74,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Add investor")],
     });
   });
@@ -84,9 +89,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [],
     });
   });
@@ -97,9 +104,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [
         invoke("/", "routes/index.tsx", "First"),
         invoke("/", "routes/index.tsx", "Second"),
@@ -116,9 +125,11 @@ describe("compile actions", () => {
       ),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [
         invoke("/", "routes/index.tsx", "Home"),
         invoke("/projects", "routes/projects.tsx", "Projects"),
@@ -132,9 +143,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [submit("/", "routes/index.tsx")],
     });
   });
@@ -145,9 +158,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [
         invoke("/", "routes/index.tsx", "Add item"),
         invoke("/", "routes/index.tsx", "Remove row"),
@@ -162,9 +177,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [
         invoke("/", "routes/index.tsx", "Save"),
         submit("/", "routes/index.tsx"),
@@ -178,9 +195,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Cancel")],
     });
   });
@@ -191,9 +210,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Save")],
     });
   });
@@ -204,9 +225,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx")],
     });
   });
@@ -217,9 +240,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Save")],
     });
   });
@@ -230,9 +255,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Save")],
     });
   });
@@ -243,9 +270,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [],
     });
   });
@@ -256,6 +285,7 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       actions: [invoke("/", "routes/index.tsx", "Delete")],
@@ -271,9 +301,11 @@ describe("compile actions", () => {
       ],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [],
     });
   });
@@ -284,9 +316,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [
         invoke("/", "routes/index.tsx", "Save"),
         invoke("/", "routes/index.tsx", "Save"),
@@ -300,9 +334,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [
         invoke("/", "routes/index.tsx", "Alpha"),
         invoke("/", "routes/index.tsx", "Zebra"),
@@ -317,9 +353,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Settings")],
     });
   });
@@ -330,9 +368,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [],
     });
   });
@@ -343,9 +383,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [],
     });
   });
@@ -356,9 +398,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx")],
     });
   });
@@ -369,9 +413,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx")],
     });
   });
@@ -382,9 +428,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Save")],
     });
   });
@@ -395,9 +443,11 @@ describe("compile actions", () => {
       screens: screens({ route: "/", file: "routes/index.tsx" }),
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       actions: [invoke("/", "routes/index.tsx", "Save")],
     });
   });

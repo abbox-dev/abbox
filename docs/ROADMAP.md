@@ -40,6 +40,10 @@ Navigation V2: screen-attributed navigation from same-file links and direct impo
 
 Actions Attribution V2: screen-attributed actions from same-file JSX and direct imported component export bodies (same conservative boundary as Navigation V2 component links). Root chrome actions are not attributed to every screen.
 
+## Step 11
+
+Product links: `links` and `globalLinks` for static native `<a href>` affordances (anchor, external, resource, protocol) with same-file, one-hop component, and root-chrome attribution. Internal screen `href` values lower to `navigation` / `globalNavigation` in parity with TanStack `<Link>`.
+
 ## Next
 
 - Actual design usage (Tailwind classes, inline styles, component CSS)

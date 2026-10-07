@@ -7,9 +7,17 @@ import {
 } from "../frameworks/react/actions.js";
 import { collectComponentAttributedActionCandidates } from "../frameworks/react/component-actions.js";
 import { collectComponentAttributedNavigation } from "../frameworks/react/component-navigation.js";
+import {
+  collectComponentAttributedAnchorNavigation,
+  collectComponentAttributedProductLinkHits,
+  dedupeAndSortLinks,
+  productLinkHitsToLinks,
+} from "../frameworks/react/component-product-links.js";
+import { collectScopedAnchors } from "../frameworks/tanstack/anchor-elements.js";
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
 import { collectScopedStaticLinks } from "../frameworks/tanstack/links.js";
 import {
+  buildGlobalLinksFromCandidates,
   buildGlobalNavigationFromCandidates,
   detectGlobalChromeCandidates,
 } from "../frameworks/tanstack/root-chrome.js";
@@ -47,14 +55,21 @@ export function compile(projectPath: string): ProductIr {
   const files = discoverSourceFiles(projectRoot);
   const routeHits = collectFileRouteScreens(files);
   const linkHits = collectScopedStaticLinks(files);
-
   const screensByFile = groupRoutesByFile(routeHits);
   const knownRoutes = new Set(routeHits.map((hit) => hit.route));
   const screenRouteFilePaths = new Set(routeHits.map((hit) => hit.filePath));
 
+  const anchorScopeResolved = collectScopedAnchors(files, knownRoutes);
+  const anchorNavigationHits = anchorScopeResolved.navigationHits.map(
+    (hit) => ({
+      filePath: hit.filePath,
+      to: hit.to,
+    }),
+  );
+
   const sameFileNavigation = buildSameFileNavigation(
     screensByFile,
-    linkHits,
+    [...linkHits, ...anchorNavigationHits],
     knownRoutes,
   );
   const componentNavigation = collectComponentAttributedNavigation(
@@ -63,17 +78,48 @@ export function compile(projectPath: string): ProductIr {
     screensByFile,
     knownRoutes,
   );
-  const navigation = mergeNavigation(sameFileNavigation, componentNavigation);
+  const componentAnchorNavigation = collectComponentAttributedAnchorNavigation(
+    projectRoot,
+    files,
+    screensByFile,
+    knownRoutes,
+  );
+  const navigation = mergeNavigation(
+    sameFileNavigation,
+    componentNavigation,
+    componentAnchorNavigation,
+  );
 
   const chromeCandidates = detectGlobalChromeCandidates(
     projectRoot,
     files,
     screenRouteFilePaths,
+    knownRoutes,
   );
   const globalNavigation = buildGlobalNavigationFromCandidates(
     projectRoot,
     chromeCandidates,
     knownRoutes,
+  );
+  const globalLinks = buildGlobalLinksFromCandidates(
+    projectRoot,
+    chromeCandidates,
+  );
+
+  const screenRouteProductLinkHits = anchorScopeResolved.productLinkHits.filter(
+    (hit) => screenRouteFilePaths.has(hit.filePath),
+  );
+  const componentProductLinks = collectComponentAttributedProductLinkHits(
+    projectRoot,
+    files,
+    screensByFile,
+    knownRoutes,
+  );
+  const links = dedupeAndSortLinks(
+    productLinkHitsToLinks(projectRoot, screensByFile, [
+      ...screenRouteProductLinkHits,
+      ...componentProductLinks.productLinkHits,
+    ]),
   );
   let actionDiscoveryIndex = 0;
   const nextActionDiscoveryIndex = (): number => {
@@ -111,6 +157,8 @@ export function compile(projectPath: string): ProductIr {
     })),
     navigation,
     globalNavigation,
+    links,
+    globalLinks,
     designSystem,
     actions,
     entities,

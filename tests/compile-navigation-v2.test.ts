@@ -12,6 +12,7 @@ const emptyDesignSystem = { designSystem: { themes: [] as const } };
 const emptyActions = { actions: [] as const };
 const emptyEntities = { entities: [] as const };
 const emptyGlobalNavigation = { globalNavigation: [] as const };
+const emptyLinks = { links: [] as const, globalLinks: [] as const };
 
 function screens(...entries: { route: string; file: string }[]) {
   return entries.map(({ route, file }) => ({
@@ -30,6 +31,7 @@ describe("navigation v2 component attribution", () => {
       ),
       navigation: [{ from: "/", to: "/items/$itemId" }],
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
       ...emptyActions,
       ...emptyEntities,
