@@ -1,8 +1,17 @@
 import { Node, Project, type SourceFile, SyntaxKind } from "ts-morph";
-import { fileRouteDestination } from "./file-routes.js";
+import { literalPropsForLocalComponentUsage } from "../react/jsx-literal-props.js";
 import { importedLocalNames } from "./named-import.js";
+import type { LiteralPropsMap } from "./static-link-destination.js";
+import {
+  absoluteRouteLiteral,
+  contextForLinkNode,
+  resolveLinkToDestinations,
+  type StaticLinkContext,
+} from "./static-link-destination.js";
 
 const linkExportName = "Link";
+
+export { absoluteRouteLiteral } from "./static-link-destination.js";
 
 export interface StaticLinkHit {
   filePath: string;
@@ -54,22 +63,78 @@ function scopedLinksInFile(sourceFile: SourceFile): ScopedStaticLinkHit[] {
   ];
 
   for (const element of linkElements) {
-    const tagName = element.getTagNameNode();
-    const to = linkDestinationFromElement(tagName, names, element);
-    if (to === undefined) {
+    const destinations = linkDestinationsFromElement(
+      element.getTagNameNode(),
+      names,
+      element,
+      sourceFile,
+      element,
+    );
+    if (destinations.length === 0) {
       continue;
     }
     const componentExportName = enclosingExportedComponentName(
       element,
       sourceFile,
     );
-    const hit: ScopedStaticLinkHit = { filePath, to };
-    if (componentExportName !== undefined) {
-      hit.componentExportName = componentExportName;
+    for (const to of destinations) {
+      const hit: ScopedStaticLinkHit = { filePath, to };
+      if (componentExportName !== undefined) {
+        hit.componentExportName = componentExportName;
+      }
+      hits.push(hit);
     }
-    hits.push(hit);
   }
   return hits;
+}
+
+function mergeLiteralProps(
+  base: LiteralPropsMap | undefined,
+  extra: LiteralPropsMap,
+): LiteralPropsMap {
+  const merged = new Map<string, string[]>();
+  if (base !== undefined) {
+    for (const [key, values] of base) {
+      merged.set(key, [...values]);
+    }
+  }
+  for (const [key, values] of extra) {
+    const existing = merged.get(key);
+    if (existing === undefined) {
+      merged.set(key, [...values]);
+    } else {
+      merged.set(key, [...new Set([...existing, ...values])].sort());
+    }
+  }
+  return merged;
+}
+
+function enclosingFunctionComponentName(
+  linkNode: Node,
+  sourceFile: SourceFile,
+): string | undefined {
+  let current: Node | undefined = linkNode;
+  while (current !== undefined && current !== sourceFile) {
+    if (
+      Node.isFunctionDeclaration(current) &&
+      current.getName() !== undefined
+    ) {
+      return current.getName();
+    }
+    if (Node.isVariableDeclaration(current)) {
+      const initializer = current.getInitializer();
+      if (
+        initializer !== undefined &&
+        (Node.isArrowFunction(initializer) ||
+          Node.isFunctionExpression(initializer)) &&
+        Node.isIdentifier(current.getNameNode())
+      ) {
+        return current.getNameNode().getText();
+      }
+    }
+    current = current.getParent();
+  }
+  return undefined;
 }
 
 function enclosingExportedComponentName(
@@ -106,15 +171,18 @@ function enclosingExportedComponentName(
   return undefined;
 }
 
-function linkDestinationFromElement(
+function linkDestinationsFromElement(
   tagName: Node,
   names: Set<string>,
   element:
     | import("ts-morph").JsxSelfClosingElement
     | import("ts-morph").JsxOpeningElement,
-): string | undefined {
+  sourceFile: SourceFile,
+  linkNode: Node,
+  contextOverride?: StaticLinkContext,
+): string[] {
   if (!Node.isIdentifier(tagName) || !names.has(tagName.getText())) {
-    return undefined;
+    return [];
   }
 
   const toAttribute = element
@@ -126,41 +194,48 @@ function linkDestinationFromElement(
     );
 
   if (toAttribute === undefined || !Node.isJsxAttribute(toAttribute)) {
-    return undefined;
+    return [];
   }
 
   const initializer = toAttribute.getInitializer();
   if (initializer === undefined) {
-    return undefined;
+    return [];
   }
 
   if (Node.isStringLiteral(initializer)) {
-    return absoluteRouteLiteral(initializer.getLiteralText());
+    const route = absoluteRouteLiteral(initializer.getLiteralText());
+    return route !== undefined ? [route] : [];
+  }
+
+  let context =
+    contextOverride !== undefined
+      ? contextOverride
+      : contextForLinkNode(linkNode, sourceFile);
+  const localFn = enclosingFunctionComponentName(linkNode, sourceFile);
+  if (localFn !== undefined) {
+    const localProps = literalPropsForLocalComponentUsage(sourceFile, localFn);
+    if (localProps.size > 0) {
+      context = {
+        ...context,
+        literalProps: mergeLiteralProps(context.literalProps, localProps),
+      };
+    }
   }
 
   if (
     Node.isJsxExpression(initializer) &&
     initializer.getExpression() !== undefined
   ) {
-    const expression = initializer.getExpression();
-    if (expression !== undefined && Node.isStringLiteral(expression)) {
-      return absoluteRouteLiteral(expression.getLiteralText());
-    }
+    return resolveLinkToDestinations(initializer.getExpression(), context);
   }
 
-  return undefined;
-}
-
-export function absoluteRouteLiteral(text: string): string | undefined {
-  if (text.length === 0 || !text.startsWith("/") || text.startsWith("//")) {
-    return undefined;
-  }
-  return fileRouteDestination(text);
+  return [];
 }
 
 export function staticLinksInComponentBody(
   sourceFile: SourceFile,
   exportName: string,
+  literalProps?: LiteralPropsMap,
 ): string[] {
   const componentBody = exportedComponentBody(sourceFile, exportName);
   if (componentBody === undefined) {
@@ -172,29 +247,37 @@ export function staticLinksInComponentBody(
   }
 
   const destinations: string[] = [];
+  const contextBase = contextForLinkNode(
+    componentBody,
+    sourceFile,
+    literalProps,
+  );
+
   for (const element of componentBody.getDescendantsOfKind(
     SyntaxKind.JsxSelfClosingElement,
   )) {
-    const to = linkDestinationFromElement(
+    const toList = linkDestinationsFromElement(
       element.getTagNameNode(),
       names,
       element,
+      sourceFile,
+      element,
+      contextBase,
     );
-    if (to !== undefined) {
-      destinations.push(to);
-    }
+    destinations.push(...toList);
   }
   for (const element of componentBody.getDescendantsOfKind(
     SyntaxKind.JsxOpeningElement,
   )) {
-    const to = linkDestinationFromElement(
+    const toList = linkDestinationsFromElement(
       element.getTagNameNode(),
       names,
       element,
+      sourceFile,
+      element,
+      contextBase,
     );
-    if (to !== undefined) {
-      destinations.push(to);
-    }
+    destinations.push(...toList);
   }
   return destinations;
 }
