@@ -46,8 +46,9 @@ Product links: `links` and `globalLinks` for static native `<a href>` affordance
 
 ## Next
 
+- **Action Coverage V3** (in progress): navigation effects on actions, improved labels (`title`, form submit text), disabled control omission, conservative handler/effect extraction—without passive `controls[]`, global actions, or shadcn trigger heuristics
 - Actual design usage (Tailwind classes, inline styles, component CSS)
-- Imperative navigation via `useNavigate()` / `navigate()` as screen navigation
+- Imperative navigation via `useNavigate()` / `navigate()` / `window.location` / `window.open` as separate future work
 - Redirects (`redirect()`, `<Navigate>`) as a separate product decision
 - Additional entity evidence (databases, APIs, loaders)
 

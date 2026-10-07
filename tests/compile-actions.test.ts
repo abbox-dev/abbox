@@ -43,13 +43,17 @@ function invoke(
   return action;
 }
 
-function submit(route: string, file: string) {
-  return {
+function submit(route: string, file: string, label?: string) {
+  const action = {
     route,
     kind: "submit" as const,
     source: { file },
     effects: [] as const,
   };
+  if (label !== undefined) {
+    return { ...action, label };
+  }
+  return action;
 }
 
 describe("compile actions", () => {
@@ -137,6 +141,24 @@ describe("compile actions", () => {
     });
   });
 
+  it("labels submit from a static submit button inside the form", () => {
+    expect(compile(fixture("form-submit-label"))).toMatchObject({
+      actions: [submit("/", "routes/index.tsx", "Send message")],
+    });
+  });
+
+  it("uses title when aria-label and static children are absent", () => {
+    expect(compile(fixture("button-title"))).toMatchObject({
+      actions: [invoke("/", "routes/index.tsx", "Save draft")],
+    });
+  });
+
+  it("omits provably disabled invoke controls", () => {
+    expect(compile(fixture("button-disabled"))).toMatchObject({
+      actions: [],
+    });
+  });
+
   it("extracts form onSubmit as submit", () => {
     expect(compile(fixture("form-submit"))).toEqual({
       schemaVersion: "1",
@@ -166,7 +188,7 @@ describe("compile actions", () => {
       actions: [
         invoke("/", "routes/index.tsx", "Add item"),
         invoke("/", "routes/index.tsx", "Remove row"),
-        submit("/", "routes/index.tsx"),
+        submit("/", "routes/index.tsx", "Create"),
       ],
     });
   });
@@ -184,7 +206,7 @@ describe("compile actions", () => {
       ...emptyLinks,
       actions: [
         invoke("/", "routes/index.tsx", "Save"),
-        submit("/", "routes/index.tsx"),
+        submit("/", "routes/index.tsx", "Save"),
       ],
     });
   });
@@ -342,7 +364,7 @@ describe("compile actions", () => {
       actions: [
         invoke("/", "routes/index.tsx", "Alpha"),
         invoke("/", "routes/index.tsx", "Zebra"),
-        submit("/", "routes/index.tsx"),
+        submit("/", "routes/index.tsx", "Go"),
       ],
     });
   });

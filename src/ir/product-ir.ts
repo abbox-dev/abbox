@@ -48,7 +48,12 @@ export interface SearchEffect {
   kind: "search";
 }
 
-export type Effect = StateEffect | SearchEffect;
+export interface NavigationEffect {
+  kind: "navigation";
+  to: string;
+}
+
+export type Effect = StateEffect | SearchEffect | NavigationEffect;
 
 export interface Action {
   route: string;

@@ -1,8 +1,5 @@
 import { type JsxChild, type JsxElement, Node } from "ts-morph";
-
-type JsxAttributeInitializer = ReturnType<
-  import("ts-morph").JsxAttribute["getInitializer"]
->;
+import { staticStringFromJsxAttribute as staticStringFromAttributes } from "./jsx-static-attributes.js";
 
 export function extractStaticLabel(
   element: JsxElement | import("ts-morph").JsxSelfClosingElement,
@@ -10,9 +7,14 @@ export function extractStaticLabel(
   const attributes = Node.isJsxElement(element)
     ? element.getOpeningElement().getAttributes()
     : element.getAttributes();
-  const ariaLabel = ariaLabelFromAttributes(attributes);
+  const ariaLabel = staticStringFromAttributes(attributes, "aria-label");
   if (ariaLabel !== undefined) {
-    return ariaLabel;
+    return normalizeWhitespace(ariaLabel);
+  }
+
+  const title = staticStringFromAttributes(attributes, "title");
+  if (title !== undefined) {
+    return normalizeWhitespace(title);
   }
 
   if (!Node.isJsxElement(element)) {
@@ -25,42 +27,6 @@ export function extractStaticLabel(
   }
   const trimmed = normalizeWhitespace(text);
   return trimmed.length === 0 ? undefined : trimmed;
-}
-
-function ariaLabelFromAttributes(
-  attributes: readonly import("ts-morph").JsxAttributeLike[],
-): string | undefined {
-  for (const attribute of attributes) {
-    if (
-      !Node.isJsxAttribute(attribute) ||
-      attribute.getNameNode().getText() !== "aria-label"
-    ) {
-      continue;
-    }
-    const literal = stringLiteralFromAttributeValue(attribute.getInitializer());
-    if (literal !== undefined) {
-      return normalizeWhitespace(literal);
-    }
-  }
-  return undefined;
-}
-
-function stringLiteralFromAttributeValue(
-  value: JsxAttributeInitializer,
-): string | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (Node.isStringLiteral(value)) {
-    return value.getLiteralText();
-  }
-  if (Node.isJsxExpression(value)) {
-    const expression = value.getExpression();
-    if (expression !== undefined && Node.isStringLiteral(expression)) {
-      return expression.getLiteralText();
-    }
-  }
-  return undefined;
 }
 
 function collectStaticText(children: readonly JsxChild[]): string | undefined {

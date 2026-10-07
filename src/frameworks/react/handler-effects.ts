@@ -9,6 +9,7 @@ import {
   type SourceFile,
 } from "ts-morph";
 import type { Effect } from "../../ir/product-ir.js";
+import { navigationEffectFromCall } from "../tanstack/navigation-effect.js";
 import { searchEffectFromCall } from "../tanstack/search-effect.js";
 import { stateEffectFromCall } from "./state-effect.js";
 
@@ -20,6 +21,7 @@ type AnalyzedFunction =
 export function effectsFromHandler(
   sourceFile: SourceFile,
   handler: Expression,
+  knownRoutes: ReadonlySet<string> = new Set(),
 ): Effect[] {
   const analyzed = analyzedFunction(handler, sourceFile);
   if (analyzed === undefined) {
@@ -36,6 +38,11 @@ export function effectsFromHandler(
     const search = searchEffectFromCall(call, sourceFile);
     if (search !== undefined) {
       effects.push(search);
+      continue;
+    }
+    const navigation = navigationEffectFromCall(call, sourceFile, knownRoutes);
+    if (navigation !== undefined) {
+      effects.push(navigation);
     }
   }
   return effects;

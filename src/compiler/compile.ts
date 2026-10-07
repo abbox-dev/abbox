@@ -129,12 +129,14 @@ export function compile(projectPath: string): ProductIr {
   };
   const sameFileActionCandidates = collectActionCandidates(
     files,
+    knownRoutes,
     nextActionDiscoveryIndex,
   );
   const componentActionCandidates = collectComponentAttributedActionCandidates(
     projectRoot,
     files,
     screensByFile,
+    knownRoutes,
     nextActionDiscoveryIndex,
   );
   const actionCandidates: ActionCandidate[] = [
