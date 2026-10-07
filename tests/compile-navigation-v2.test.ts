@@ -184,4 +184,59 @@ describe("navigation v2 global chrome", () => {
   it("returns empty globalNavigation when no chrome qualifies", () => {
     expect(compile(fixture("component-named")).globalNavigation).toEqual([]);
   });
+
+  it("extracts global navigation from sibling chrome around Outlet", () => {
+    expect(compile(fixture("global-chrome-siblings")).globalNavigation).toEqual(
+      [
+        { to: "/", source: { file: "components/TopBar.tsx" } },
+        { to: "/about", source: { file: "components/TopBar.tsx" } },
+        { to: "/contact", source: { file: "components/BottomBar.tsx" } },
+      ],
+    );
+    expect(compile(fixture("global-chrome-siblings")).navigation).toEqual([]);
+  });
+
+  it("omits sibling global chrome when the module is reused on a route screen", () => {
+    expect(
+      compile(fixture("global-chrome-siblings-reused")).globalNavigation,
+    ).toEqual([]);
+  });
+});
+
+describe("navigation v3 static lowering", () => {
+  it("attributes navigation through a literal JSX prop into an imported component", () => {
+    expect(compile(fixture("prop-link-screen"))).toMatchObject({
+      navigation: [{ from: "/", to: "/target" }],
+    });
+  });
+
+  it("attributes navigation through a literal prop into a same-file helper component", () => {
+    expect(compile(fixture("prop-link-local-slug"))).toMatchObject({
+      navigation: [{ from: "/", to: "/detail" }],
+    });
+  });
+
+  it("resolves a local const binding in Link to", () => {
+    expect(compile(fixture("static-local-const"))).toMatchObject({
+      navigation: [{ from: "/", to: "/target" }],
+    });
+  });
+
+  it("resolves static array map property access in Link to", () => {
+    expect(compile(fixture("static-local-map"))).toMatchObject({
+      navigation: [
+        { from: "/", to: "/a" },
+        { from: "/", to: "/b" },
+      ],
+    });
+  });
+
+  it("resolves destructured map parameters in Link to", () => {
+    expect(compile(fixture("static-local-map-destructure"))).toMatchObject({
+      navigation: [
+        { from: "/", to: "/x" },
+        { from: "/", to: "/y" },
+      ],
+    });
+  });
 });

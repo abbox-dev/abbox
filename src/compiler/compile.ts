@@ -10,8 +10,8 @@ import { collectComponentAttributedNavigation } from "../frameworks/react/compon
 import { collectFileRouteScreens } from "../frameworks/tanstack/file-routes.js";
 import { collectScopedStaticLinks } from "../frameworks/tanstack/links.js";
 import {
-  buildGlobalNavigationFromCandidate,
-  detectGlobalChromeCandidate,
+  buildGlobalNavigationFromCandidates,
+  detectGlobalChromeCandidates,
 } from "../frameworks/tanstack/root-chrome.js";
 import { collectEntityCandidates } from "../frameworks/typescript/entity-models.js";
 import {
@@ -65,14 +65,14 @@ export function compile(projectPath: string): ProductIr {
   );
   const navigation = mergeNavigation(sameFileNavigation, componentNavigation);
 
-  const chromeCandidate = detectGlobalChromeCandidate(
+  const chromeCandidates = detectGlobalChromeCandidates(
     projectRoot,
     files,
     screenRouteFilePaths,
   );
-  const globalNavigation = buildGlobalNavigationFromCandidate(
+  const globalNavigation = buildGlobalNavigationFromCandidates(
     projectRoot,
-    chromeCandidate,
+    chromeCandidates,
     knownRoutes,
   );
   let actionDiscoveryIndex = 0;

@@ -5,6 +5,7 @@ import {
   directComponentImportsInFile,
   jsxDirectComponentLocalNames,
 } from "./direct-component-imports.js";
+import { literalPropsForComponentUsage } from "./jsx-literal-props.js";
 
 export function collectComponentAttributedNavigation(
   projectRoot: string,
@@ -46,9 +47,11 @@ export function collectComponentAttributedNavigation(
       }
 
       const componentFile = project.addSourceFileAtPath(entry.resolvedFilePath);
+      const literalProps = literalPropsForComponentUsage(sourceFile, entry);
       for (const to of staticLinksInComponentBody(
         componentFile,
         entry.exportName,
+        literalProps,
       )) {
         if (!knownRoutes.has(to)) {
           continue;

@@ -59,7 +59,7 @@ tests/fixtures/design-system-colors/
 
 `src/compiler/compile.ts` discovers `.ts`, `.tsx`, and `.css` files (same skip directories for each), extracts TanStack screens, screen-attributed navigation, global navigation from root layout chrome, static JSX actions and nested handler effects, declared CSS theme colors, and entities from TypeScript model evidence.
 
-TanStack-specific navigation rules live under `src/frameworks/tanstack/` (`links.ts`, `root-chrome.ts`) and `src/frameworks/react/component-navigation.ts` for direct component attribution. Product IR field names (`navigation`, `globalNavigation`) stay framework-independent in `src/ir/product-ir.ts`.
+TanStack-specific navigation rules live under `src/frameworks/tanstack/` (`links.ts`, `static-link-destination.ts`, `root-chrome.ts`) and `src/frameworks/react/component-navigation.ts` and `jsx-literal-props.ts` for direct component attribution and one-hop literal props. Product IR field names (`navigation`, `globalNavigation`) stay framework-independent in `src/ir/product-ir.ts`.
 
 `src/frameworks/typescript/entity-models.ts` emits entities when a file exports an object type or interface and an exported `N[]` / `Array<N>` collection for the same name.
 

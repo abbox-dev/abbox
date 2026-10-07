@@ -90,9 +90,13 @@ Same-file evidence: a TanStack `<Link>` in the same module as exactly one extrac
 
 Component evidence: the screen module directly renders an imported exported function component (single-hop import, no barrel re-export), and that component’s function body contains a supported static `<Link>` to another discovered screen.
 
+Supported static `to` evidence (compiler rules, not IR fields): a string literal on `to`; a one-hop literal JSX attribute on a directly rendered imported or same-file component that binds to `to={prop}` or `props.prop`; a `const` string binding in the enclosing function or module scope; or a `const` array of object literals mapped in JSX where `to` is `row.key` or a destructured field with literal values in each element. Unresolved expressions are omitted.
+
 A TanStack index route id used as `to` resolves through the same destination rule as screens. Duplicate `{ from, to }` pairs collapse to one entry. The order of `navigation` is not part of the Product IR contract.
 
 `globalNavigation` is always present. It lists destinations exposed through persistent application chrome around the routed main content area of the application. Each entry has `to` (a discovered screen destination) and `source.file` (the module that owns the chrome links). It does not include a `from` screen: the compiler does not expand chrome into one navigation edge per screen.
+
+Global chrome evidence: static `<Link>` elements in the export body of (1) the single imported innermost wrapper around `<Outlet />` in the root route `component`, when that pattern applies, and/or (2) directly imported components rendered in the root `component` outside the innermost JSX container that holds `<Outlet />` (sibling layout chrome), when there is exactly one `<Outlet />` in that root component. Chrome modules also imported by screen route files are excluded. Literal JSX props from the root file are applied one hop into chrome components the same way as screen attribution.
 
 Absence of `globalNavigation` entries in older `schemaVersion: "1"` documents, or an empty array in current output, does not prove the product has no global navigation—only that this compiler pass did not justify any chrome links under its rules.
 
