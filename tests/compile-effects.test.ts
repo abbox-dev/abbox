@@ -10,14 +10,16 @@ function fixture(name: string): string {
 
 const emptyNavigation = { navigation: [] as const };
 const emptyGlobalNavigation = { globalNavigation: [] as const };
+const emptyLinks = { links: [] as const, globalLinks: [] as const };
 const emptyDesignSystem = { designSystem: { themes: [] as const } };
 
 function invoke(
   label: string,
   effects: ReadonlyArray<{
-    kind: "state" | "search";
+    kind: "state" | "search" | "navigation";
     target?: string;
     value?: string | number | boolean | null;
+    to?: string;
   }>,
 ) {
   return {
@@ -165,6 +167,7 @@ describe("compile effects", () => {
       ],
       ...emptyNavigation,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
       ...emptyDesignSystem,
     });
   });
@@ -174,6 +177,7 @@ describe("compile effects", () => {
       {
         route: "/",
         kind: "submit",
+        label: "Send",
         source: { file: "routes/index.tsx" },
         effects: [{ kind: "state", target: "name", value: "" }],
       },
@@ -185,6 +189,7 @@ describe("compile effects", () => {
       {
         route: "/",
         kind: "submit",
+        label: "Send",
         source: { file: "routes/index.tsx" },
         effects: [],
       },
@@ -194,6 +199,12 @@ describe("compile effects", () => {
   it("does not follow a call made by the resolved function", () => {
     expect(compile(fixture("no-recursive-follow")).actions).toEqual([
       invoke("Clear", []),
+    ]);
+  });
+
+  it("extracts a navigation effect when useNavigate targets a discovered screen", () => {
+    expect(compile(fixture("navigation-effect")).actions).toEqual([
+      invoke("Settings", [{ kind: "navigation", to: "/settings" }]),
     ]);
   });
 });

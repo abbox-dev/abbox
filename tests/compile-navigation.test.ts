@@ -19,6 +19,7 @@ const emptyDesignSystem = { designSystem: { themes: [] as const } };
 const emptyActions = { actions: [] as const };
 const emptyEntities = { entities: [] as const };
 const emptyGlobalNavigation = { globalNavigation: [] as const };
+const emptyLinks = { links: [] as const, globalLinks: [] as const };
 
 describe("compile navigation", () => {
   it("links from / to a discovered /projects screen", () => {
@@ -33,6 +34,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -48,6 +50,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -63,6 +66,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -83,6 +87,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -101,6 +106,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -116,6 +122,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -146,6 +153,7 @@ describe("compile navigation", () => {
       ],
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -158,6 +166,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -173,6 +182,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -188,6 +198,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -203,6 +214,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -218,6 +230,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -233,6 +246,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 
@@ -248,6 +262,7 @@ describe("compile navigation", () => {
       ...emptyActions,
       ...emptyEntities,
       ...emptyGlobalNavigation,
+      ...emptyLinks,
     });
   });
 });

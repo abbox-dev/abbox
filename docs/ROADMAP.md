@@ -40,10 +40,15 @@ Navigation V2: screen-attributed navigation from same-file links and direct impo
 
 Actions Attribution V2: screen-attributed actions from same-file JSX and direct imported component export bodies (same conservative boundary as Navigation V2 component links). Root chrome actions are not attributed to every screen.
 
+## Step 11
+
+Product links: `links` and `globalLinks` for static native `<a href>` affordances (anchor, external, resource, protocol) with same-file, one-hop component, and root-chrome attribution. Internal screen `href` values lower to `navigation` / `globalNavigation` in parity with TanStack `<Link>`.
+
 ## Next
 
+- **Action Coverage V3** (in progress): navigation effects on actions, improved labels (`title`, form submit text), disabled control omission, conservative handler/effect extraction—without passive `controls[]`, global actions, or shadcn trigger heuristics
 - Actual design usage (Tailwind classes, inline styles, component CSS)
-- Imperative navigation via `useNavigate()` / `navigate()` as screen navigation
+- Imperative navigation via `useNavigate()` / `navigate()` / `window.location` / `window.open` as separate future work
 - Redirects (`redirect()`, `<Navigate>`) as a separate product decision
 - Additional entity evidence (databases, APIs, loaders)
 

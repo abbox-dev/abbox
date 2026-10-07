@@ -48,7 +48,12 @@ export interface SearchEffect {
   kind: "search";
 }
 
-export type Effect = StateEffect | SearchEffect;
+export interface NavigationEffect {
+  kind: "navigation";
+  to: string;
+}
+
+export type Effect = StateEffect | SearchEffect | NavigationEffect;
 
 export interface Action {
   route: string;
@@ -82,11 +87,75 @@ export interface GlobalNavigationSource {
   file: string;
 }
 
+export interface LinkSource {
+  file: string;
+}
+
+export type Link =
+  | {
+      route: string;
+      kind: "anchor";
+      hash: string;
+      label?: string;
+      source: LinkSource;
+    }
+  | {
+      route: string;
+      kind: "external";
+      url: string;
+      label?: string;
+      source: LinkSource;
+    }
+  | {
+      route: string;
+      kind: "resource";
+      path: string;
+      label?: string;
+      download?: boolean;
+      source: LinkSource;
+    }
+  | {
+      route: string;
+      kind: "protocol";
+      url: string;
+      label?: string;
+      source: LinkSource;
+    };
+
+export type GlobalLink =
+  | {
+      kind: "anchor";
+      hash: string;
+      label?: string;
+      source: LinkSource;
+    }
+  | {
+      kind: "external";
+      url: string;
+      label?: string;
+      source: LinkSource;
+    }
+  | {
+      kind: "resource";
+      path: string;
+      label?: string;
+      download?: boolean;
+      source: LinkSource;
+    }
+  | {
+      kind: "protocol";
+      url: string;
+      label?: string;
+      source: LinkSource;
+    };
+
 export interface ProductIr {
   schemaVersion: typeof productIrSchemaVersion;
   screens: Screen[];
   navigation: Navigation[];
   globalNavigation: GlobalNavigation[];
+  links: Link[];
+  globalLinks: GlobalLink[];
   designSystem: DesignSystem;
   actions: Action[];
   entities: Entity[];

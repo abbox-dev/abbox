@@ -27,6 +27,26 @@
       }
     }
   ],
+  "links": [
+    {
+      "route": "/",
+      "kind": "anchor",
+      "hash": "pricing",
+      "label": "Pricing",
+      "source": {
+        "file": "routes/index.tsx"
+      }
+    }
+  ],
+  "globalLinks": [
+    {
+      "kind": "external",
+      "url": "https://example.com",
+      "source": {
+        "file": "components/SiteFooter.tsx"
+      }
+    }
+  ],
   "designSystem": {
     "themes": [
       {
@@ -104,6 +124,21 @@ Consumers may treat `globalNavigation` destinations as reachable from any discov
 
 Duplicate `to` values in `globalNavigation` collapse to one entry, sorted by `to` then `source.file`. The order of `globalNavigation` is not part of the Product IR contract.
 
+`links` and `globalLinks` are always present. They describe user-visible static destinations that are not internal screen transitions in `navigation` / `globalNavigation`.
+
+`links` are attributed to a discovered screen (`route` is a `Screen.route`). Each entry is a discriminated union on `kind`:
+
+- `anchor` — same-document fragment (`hash` without leading `#`)
+- `external` — `http://` or `https://` URL
+- `resource` — static path to a file or asset (not a discovered screen); optional `download: true` when a boolean `download` attribute is provably present
+- `protocol` — `mailto:`, `tel:`, or `sms:` URL
+
+`globalLinks` use the same `kind` variants without `route`. They come from persistent root chrome using the same chrome evidence rules as `globalNavigation`.
+
+Plain native `<a href="...">` uses the same static resolution machinery as TanStack `<Link to="...">` where applicable. When `href` resolves to a discovered screen destination, it lowers to `navigation` or `globalNavigation` (including `href="/screen#fragment"` as navigation to the screen plus an optional `anchor` link for the fragment). Dynamic `href`, `javascript:`, and unknown targets are omitted.
+
+Optional `label` is a conservative static text label from element children when extractable. Duplicate links collapse using `route` (when present), `kind`, target (`hash`, `url`, or `path`), `label`, `source.file`, and `download`. Sort order is not part of the Product IR contract.
+
 `designSystem.themes` is always present. It is empty when no recognized runtime theme exists in project CSS.
 
 Runtime themes in v1:
@@ -153,9 +188,13 @@ Only a concise arrow call, or a call statement at the top of that body, is inspe
 
 `kind: "search"` is a TanStack search update that stays on the current destination. The callee must be a local binding of `useNavigate()` imported from `@tanstack/react-router`, or of `Route.useNavigate()` where `Route` is the local `createFileRoute("...")` binding in that file. An arbitrary `Something.useNavigate()` does not qualify. The call has one object argument that contains `search`, and `to` is absent or the literal `"."`. Search keys and values are not emitted. A `to` that names another destination, or a dynamic `to`, is not a search effect.
 
-`kind: "submit"` remains an action kind. It is not an effect. `preventDefault()` is not an effect. Only handler calls that independently match `state` or `search` are effects. `navigation` is unchanged: static `<Link>` screen edges, not search effects and not imperative navigation.
+`kind: "navigation"` is imperative navigation to another discovered screen caused by an action handler. The callee must be the same TanStack `useNavigate` / `Route.useNavigate` binding as for `search`. The call has one object argument with a static string `to` that resolves to a discovered `Screen.route`. Local functions named `navigate` do not qualify. Declarative `<Link>` / `<a href>` screen transitions remain in `navigation` / `globalNavigation`, not as navigation effects.
 
-Storage, network, mutations, server functions, imported helpers, writes that happen later in `useEffect`, input or select changes, and clicks that are not already actions are not effects.
+Optional `label` on actions uses static `aria-label`, then static `title`, then static visible control text. For `submit`, a static `aria-label` on the `<form>` wins; otherwise the label comes from a statically identifiable submit `<button>` inside the form. A control with a provably static `disabled` attribute is omitted.
+
+`kind: "submit"` remains an action kind. It is not an effect. `preventDefault()` is not an effect.
+
+Storage, network, mutations, server functions, imported helpers, writes that happen later in `useEffect`, passive inputs without activation handlers, and clicks that are not already actions are not effects.
 
 `entities` is always present. It lists product record concepts the compiler can justify from static evidence in v1.
 

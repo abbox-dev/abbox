@@ -44,6 +44,13 @@ export function resolveLinkToDestinations(
   return out;
 }
 
+export function resolveStaticStringExpressions(
+  expression: import("ts-morph").Expression,
+  context: StaticLinkContext,
+): string[] {
+  return resolveToRouteStrings(expression, context);
+}
+
 function resolveToRouteStrings(
   expression: import("ts-morph").Expression,
   context: StaticLinkContext,

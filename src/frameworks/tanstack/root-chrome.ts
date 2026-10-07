@@ -1,11 +1,19 @@
 import { Node, Project, type SourceFile, SyntaxKind } from "ts-morph";
 import { toProjectRelativePath } from "../../compiler/discover-source-files.js";
-import type { GlobalNavigation } from "../../ir/product-ir.js";
+import type { GlobalLink, GlobalNavigation } from "../../ir/product-ir.js";
+import {
+  dedupeAndSortGlobalLinks,
+  productLinkHitsToGlobalLinks,
+} from "../react/component-product-links.js";
 import {
   type DirectComponentImport,
   directComponentImportsInFile,
 } from "../react/direct-component-imports.js";
 import { literalPropsForComponentUsage } from "../react/jsx-literal-props.js";
+import {
+  type ScopedProductLinkHit,
+  staticAnchorsInComponentBody,
+} from "./anchor-elements.js";
 import { staticLinksInComponentBody } from "./links.js";
 import { importedLocalNames } from "./named-import.js";
 
@@ -16,12 +24,14 @@ export interface GlobalNavigationCandidate {
   chromeModulePath: string;
   chromeExportName: string;
   destinations: string[];
+  productLinkHits: ScopedProductLinkHit[];
 }
 
 export function detectGlobalChromeCandidates(
   projectRoot: string,
   files: readonly string[],
   screenRouteFilePaths: ReadonlySet<string>,
+  knownRoutes: ReadonlySet<string>,
 ): GlobalNavigationCandidate[] {
   if (files.length === 0) {
     return [];
@@ -62,6 +72,7 @@ export function detectGlobalChromeCandidates(
         wrapper,
         sourceFile,
         screenRouteFilePaths,
+        knownRoutes,
         merged,
       );
     }
@@ -76,6 +87,7 @@ export function detectGlobalChromeCandidates(
         sibling,
         sourceFile,
         screenRouteFilePaths,
+        knownRoutes,
         merged,
       );
     }
@@ -95,11 +107,13 @@ export function detectGlobalChromeCandidate(
   projectRoot: string,
   files: readonly string[],
   screenRouteFilePaths: ReadonlySet<string>,
+  knownRoutes: ReadonlySet<string>,
 ): GlobalNavigationCandidate | undefined {
   const candidates = detectGlobalChromeCandidates(
     projectRoot,
     files,
     screenRouteFilePaths,
+    knownRoutes,
   );
   if (candidates.length !== 1) {
     return candidates.length === 0 ? undefined : candidates[0];
@@ -113,6 +127,7 @@ function addChromeCandidate(
   importEntry: DirectComponentImport,
   rootSourceFile: SourceFile,
   screenRouteFilePaths: ReadonlySet<string>,
+  knownRoutes: ReadonlySet<string>,
   merged: Map<string, GlobalNavigationCandidate>,
 ): void {
   if (
@@ -133,12 +148,22 @@ function addChromeCandidate(
   const componentFile = project.addSourceFileAtPath(
     importEntry.resolvedFilePath,
   );
-  const destinations = staticLinksInComponentBody(
+  const linkDestinations = staticLinksInComponentBody(
     componentFile,
     importEntry.exportName,
     literalProps,
   );
-  if (destinations.length === 0) {
+  const anchorExtract = staticAnchorsInComponentBody(
+    componentFile,
+    importEntry.exportName,
+    knownRoutes,
+    literalProps,
+  );
+  const destinations = [
+    ...new Set([...linkDestinations, ...anchorExtract.navigationDestinations]),
+  ];
+  const productLinkHits = anchorExtract.productLinkHits;
+  if (destinations.length === 0 && productLinkHits.length === 0) {
     return;
   }
 
@@ -148,11 +173,13 @@ function addChromeCandidate(
     merged.set(key, {
       chromeModulePath: importEntry.resolvedFilePath,
       chromeExportName: importEntry.exportName,
-      destinations: [...new Set(destinations)],
+      destinations,
+      productLinkHits: [...productLinkHits],
     });
   } else {
     const combined = new Set([...existing.destinations, ...destinations]);
     existing.destinations = [...combined];
+    existing.productLinkHits.push(...productLinkHits);
   }
 }
 
@@ -197,6 +224,23 @@ export function buildGlobalNavigationFromCandidates(
     }
     return left.source.file.localeCompare(right.source.file);
   });
+}
+
+export function buildGlobalLinksFromCandidates(
+  projectRoot: string,
+  candidates: readonly GlobalNavigationCandidate[],
+): GlobalLink[] {
+  const links: GlobalLink[] = [];
+  for (const candidate of candidates) {
+    links.push(
+      ...productLinkHitsToGlobalLinks(
+        projectRoot,
+        candidate.chromeModulePath,
+        candidate.productLinkHits,
+      ),
+    );
+  }
+  return dedupeAndSortGlobalLinks(links);
 }
 
 export function buildGlobalNavigationFromCandidate(

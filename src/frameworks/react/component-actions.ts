@@ -10,6 +10,7 @@ export function collectComponentAttributedActionCandidates(
   projectRoot: string,
   screenFilePaths: readonly string[],
   screensByFile: Map<string, string[]>,
+  knownRoutes: ReadonlySet<string>,
   nextIndex: () => number,
 ): ActionCandidate[] {
   if (screenFilePaths.length === 0) {
@@ -58,6 +59,7 @@ export function collectComponentAttributedActionCandidates(
           componentFile,
           entry.exportName,
           routeFilePath,
+          knownRoutes,
           nextIndex,
         ),
       );
